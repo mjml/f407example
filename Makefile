@@ -1,7 +1,7 @@
 
-CPPSRC=
+CPPSRC=$(shell ls *.cpp)
 CSRC=$(shell ls *.c)
-OBJS=$(CSRC:.cpp=.obj) $(CPPSRC:.c=.o) startup_stm32f302x8.o system_stm32f3xx.o
+OBJS=$(CPPSRC:.cpp=.obj) $(CSRC:.c=.o) startup_stm32f103xb.o system_stm32f1xx.o
 CPP=arm-none-eabi-g++
 CC=arm-none-eabi-gcc
 AS=arm-none-eabi-gcc -x assembler-with-cpp
@@ -10,12 +10,12 @@ CP=arm-none-eabi-objcopy
 SZ=arm-none-eabi-size
 HEX=$(CP) -O ihex
 BIN=$(CP) -O binary -S
-CUBE=cube
+CUBE=cubeF1
 
-MCU=-mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard
+MCU=-mcpu=cortex-m4 -mthumb
 
-INCLUDE= -I$(CUBE)/Drivers/CMSIS/Device/ST/STM32F3xx/Include -I$(CUBE)/Drivers/CMSIS/Core/Include -I$(CUBE)/Drivers/CMSIS/Include
-DEFS = -DSTM32F302x8
+INCLUDE= -I$(CUBE)/Drivers/CMSIS/Device/ST/STM32F1xx/Include -I$(CUBE)/Drivers/CMSIS/Core/Include -I$(CUBE)/Drivers/CMSIS/Include
+DEFS = -DSTM32F103xB
 
 ASFLAGS=$(MCU) -c -Wall -fdata-sections -ffunction-sections
 CFLAGS=$(MCU) $(INCLUDE) $(DEFS)
@@ -25,28 +25,28 @@ CFLAGS += -g -gdwarf-2
 endif
 CFLAGS += -Og -MMD -MP -MF"$(@:%.o=%.d)"
 
-LDSCRIPT = STM32F302R6Tx_FLASH.ld
+LDSCRIPT = STM32F103XB_FLASH.ld
 LIBS=-lc -lm -lnosys
 LIBDIR=
-LDFLAGS=$(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=nohal.map,--cref -Wl,--gc-sections
+LDFLAGS=$(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(TARGET).map,--cref -Wl,--gc-sections
 
-all: nohal.hex
+all: $(TARGET).hex
 
 clean:
-	$(RM) -rf *.d *.o *.obj *.map nohal.elf nohal.hex
+	$(RM) -rf *.d *.o *.obj *.map $(TARGET).elf $(TARGET).hex
 
-nohal.hex: nohal.elf
+$(TARGET).hex: $(TARGET).elf
 	$(HEX) $< $@
 
-nohal.bin: nohal.elf
+$(TARGET).bin: $(TARGET).elf
 	$(BIN) $< $@
 
-nohal.elf: $(OBJS)
+$(TARGET).elf: $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $<
 	$(SZ) $@
 
 %.obj: %.cpp
-	$(CPP) $(CPPFLAGS) -o $@ $<
+	$(CPP) $(CPPFLAGS) -o $@ -c $<
 
 %.o: %.c
 	$(CC) $(CFLAGS) -o $@ -c $<
