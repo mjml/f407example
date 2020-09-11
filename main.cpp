@@ -5,9 +5,16 @@ void SystemInit (void) {
 
 }
 
-void main () {
+int main () {
 
 	
 	
 }
 
+
+void TIM2_IRQHandler ()
+{
+
+	
+	
+}

@@ -1,4 +1,4 @@
-
+TARGET=squeezer
 CPPSRC=$(shell ls *.cpp)
 CSRC=$(shell ls *.c)
 OBJS=$(CPPSRC:.cpp=.obj) $(CSRC:.c=.o) startup_stm32f103xb.o system_stm32f1xx.o
