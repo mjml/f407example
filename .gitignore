@@ -1,6 +1,7 @@
 *.o
+*.obj
 *.d
 *.map
-nohal.elf
-nohal.hex
-nohal.bin
+*.elf
+*.hex
+*.bin
