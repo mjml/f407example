@@ -16,21 +16,23 @@ MCU=-mcpu=cortex-m4 -mthumb
 
 INCLUDE= -I$(CUBE)/Drivers/CMSIS/Device/ST/STM32F1xx/Include -I$(CUBE)/Drivers/CMSIS/Core/Include -I$(CUBE)/Drivers/CMSIS/Include
 DEFS = -DSTM32F103xB
+OPT = -Og
 
 ASFLAGS=$(MCU) -c -Wall -fdata-sections -ffunction-sections
-CFLAGS=$(MCU) $(INCLUDE) $(DEFS)
-CPPFLAGS=$(MCU) $(INCLUDE) $(DEFS)
+CFLAGS=$(MCU) $(OPT) $(INCLUDE) $(DEFS)
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2
 endif
-CFLAGS += -Og -MMD -MP -MF"$(@:%.o=%.d)"
+# I don't bother adding the fine-grained dependencies
+#CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
+CPPFLAGS=$(CFLAGS)
 
 LDSCRIPT = STM32F103XB_FLASH.ld
 LIBS=-lc -lm -lnosys
 LIBDIR=
 LDFLAGS=$(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(TARGET).map,--cref -Wl,--gc-sections
 
-all: $(TARGET).hex
+all: $(TARGET).bin
 
 clean:
 	$(RM) -rf *.d *.o *.obj *.map $(TARGET).elf $(TARGET).hex
@@ -54,5 +56,5 @@ $(TARGET).elf: $(OBJS)
 %.o: %.s
 	$(AS) $(ASFLAGS) -o $@ -c $<
 
-
+.PHONY: clean
 
