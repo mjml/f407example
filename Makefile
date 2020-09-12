@@ -30,12 +30,12 @@ CPPFLAGS=$(CFLAGS)
 LDSCRIPT = STM32F103XB_FLASH.ld
 LIBS=-lc -lm -lnosys
 LIBDIR=
-LDFLAGS=$(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(TARGET).map,--cref -Wl,--gc-sections
+LDFLAGS=$(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(TARGET).map,--cref
 
 all: $(TARGET).bin
 
 clean:
-	$(RM) -rf *.d *.o *.obj *.map $(TARGET).elf $(TARGET).hex
+	$(RM) -rf *.d *.o *.obj *.map $(TARGET).elf $(TARGET).hex $(TARGET).bin
 
 $(TARGET).hex: $(TARGET).elf
 	$(HEX) $< $@
