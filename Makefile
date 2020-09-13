@@ -13,25 +13,22 @@ BIN=$(CP) -O binary -S
 CUBE=cubeF1
 BUILDDIR=build
 
+# Names: 1st used for startup.s files, 2nd for driver directory, 3rd for specific system_stm32fxxxyz.c file and HAL device header file
+arch_short=stm32f1xx
+ARCH_short=STM32F1xx
+arch_specific=stm32f103xb
 MCU=-mcpu=cortex-m4 -mthumb
 DEFS = -DSTM32F103xB
 OPT = -Og
 
-INCLUDE= -I. -I$(CUBE)/Drivers/CMSIS/Device/ST/STM32F1xx/Include -I$(CUBE)/Drivers/CMSIS/Core/Include -I$(CUBE)/Drivers/CMSIS/Include
+INCLUDE= -I. -I$(CUBE)/Drivers/CMSIS/Device/ST/$(ARCH_short)/Include -I$(CUBE)/Drivers/CMSIS/Core/Include -I$(CUBE)/Drivers/CMSIS/Include
 ifeq ($(HAL),1)
-HALDIR=$(CUBE)/Drivers/STM32F1xx_HAL_Driver
+HALDIR=$(CUBE)/Drivers/$(ARCH_short)_HAL_Driver
 HALINCLDIR=$(HALDIR)/Inc
 HALSRCDIR=$(HALDIR)/Src
 INCLUDE += -I$(HALINCLDIR)
-MODS = stm32f1xx_hal \
-					stm32f1xx_hal_cortex \
-					stm32f1xx_hal_tim \
-					stm32f1xx_hal_tim_ex \
-					stm32f1xx_hal_gpio \
-					stm32f1xx_hal_dac \
-	 				stm32f1xx_hal_dma \
-	 				stm32f1xx_hal_rcc 
-HALOBJS = $(patsubst %,%.o,$(MODS))
+HALMODULES = cortex tim tim_ex gpio dac dma rcc 
+HALOBJS = $(arch_short)_hal.o $(patsubst %,$(arch_short)_hal_%.o,$(HALMODULES))
 endif
 
 
@@ -44,7 +41,7 @@ endif
 #CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 CPPFLAGS=$(CFLAGS)
 
-OBJS=$(CPPSRC:.cpp=.obj) $(CSRC:.c=.o) startup_stm32f103xb.o system_stm32f1xx.o $(HALOBJS)
+OBJS=$(CPPSRC:.cpp=.obj) $(CSRC:.c=.o) startup_$(arch_specific).o system_$(arch_short).o $(HALOBJS)
 BUILDOBJS=$(patsubst %,$(BUILDDIR)/%,$(OBJS))
 
 LDSCRIPT = STM32F103XB_FLASH.ld
