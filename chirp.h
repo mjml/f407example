@@ -2,6 +2,7 @@
 
 struct Chirp
 {
+	
 	struct State
 	{
 		Chirp* chirp;
@@ -42,11 +43,11 @@ struct Chirp
      **/
 	static Chirp Sec(int f, int s) { return { .freq1 = f, .freq2 = f, .d = s * 1000 * 1000}; }
 
-	State Instantiate () {
+	State Instantiate () { 
         State s;
         s.chirp = this;
         s.phase = 0;
-        // s.stoptick = ?
+        s.stoptick = duration  + HAL_GetTick();
         return s;
 	}
 

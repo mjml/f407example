@@ -1,5 +1,6 @@
 TARGET=squeezer
 HAL=1
+DEBUG=1
 CPPSRC=$(shell ls *.cpp)
 CSRC=$(shell ls *.c)
 CPP=arm-none-eabi-g++
@@ -12,6 +13,7 @@ HEX=$(CP) -O ihex
 BIN=$(CP) -O binary -S
 CUBE=cubeF1
 BUILDDIR=build
+FLASH=st-flash
 
 # Names: 1st used for startup.s files, 2nd for driver directory, 3rd for specific system_stm32fxxxyz.c file and HAL device header file
 arch_short=stm32f1xx
@@ -27,8 +29,12 @@ HALDIR=$(CUBE)/Drivers/$(ARCH_short)_HAL_Driver
 HALINCLDIR=$(HALDIR)/Inc
 HALSRCDIR=$(HALDIR)/Src
 INCLUDE += -I$(HALINCLDIR)
-HALMODULES = cortex tim tim_ex gpio dac dma rcc 
-HALOBJS = $(arch_short)_hal.o $(patsubst %,$(arch_short)_hal_%.o,$(HALMODULES))
+HALMODULES = cortex tim tim_ex gpio dac dma rcc
+LLMODULES = gpio
+ifneq ($(LLMODULES),)
+DEFS += -DUSE_FULL_LL_DRIVER
+endif
+HALOBJS = $(arch_short)_hal.o $(patsubst %,$(arch_short)_hal_%.o,$(HALMODULES)) $(patsubst %,$(arch_short)_ll_%.o,$(LLMODULES))
 endif
 
 
@@ -37,9 +43,10 @@ CFLAGS=$(MCU) $(OPT) $(INCLUDE) $(DEFS)
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2
 endif
-# I don't bother adding the fine-grained dependencies
-#CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
-CPPFLAGS=$(CFLAGS)
+
+CPPFLAGS = $(CFLAGS)
+CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
+CPPFLAGS += -MMD -MP -MF"$(@:%.obj=%.d)"
 
 OBJS=$(CPPSRC:.cpp=.obj) $(CSRC:.c=.o) startup_$(arch_specific).o system_$(arch_short).o $(HALOBJS)
 BUILDOBJS=$(patsubst %,$(BUILDDIR)/%,$(OBJS))
@@ -47,15 +54,15 @@ BUILDOBJS=$(patsubst %,$(BUILDDIR)/%,$(OBJS))
 LDSCRIPT = STM32F103XB_FLASH.ld
 LIBS=-lc -lm -lnosys
 LIBDIR=
-LDFLAGS=$(MCU) -specs=nosys.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(TARGET).map,--cref
+LDFLAGS=$(MCU) -specs=nosys.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(TARGET).map,--cref,--gc-sections
 
 all: $(TARGET).bin
 
 clean:
 	$(RM) -rf *.d *.o *.obj *.map $(TARGET).elf $(TARGET).hex $(TARGET).bin build/*
 
-flash:
-	$(FLASH) write $(TARGET).elf 0x8000000
+flash: $(TARGET).bin
+	$(FLASH) --format binary write $(TARGET).bin 0x08000000
 
 $(TARGET).hex: $(TARGET).elf
 	$(HEX) $< $@
@@ -66,6 +73,12 @@ $(TARGET).bin: $(TARGET).elf
 $(TARGET).elf: $(BUILDOBJS)
 	$(CC) $(LDFLAGS) -o $@ $^
 	$(SZ) $@
+
+$(BUILDDIR)/%.d: %.cpp
+	;
+
+$(BUILDDIR)/%.d: %.c
+	;
 
 $(BUILDDIR)/%.obj: %.cpp 
 	$(CPP) $(CPPFLAGS) -o $@ -c $<
@@ -81,3 +94,4 @@ $(BUILDDIR)/%.o: $(HALSRCDIR)/%.c
 
 .PHONY: clean all flash
 
+-include $(wildcard $(BUILD_DIR)/*.d)
