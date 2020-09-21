@@ -38,7 +38,7 @@ HALOBJS = $(arch_short)_hal.o $(patsubst %,$(arch_short)_hal_%.o,$(HALMODULES)) 
 endif
 
 
-ASFLAGS=$(MCU) -c -Wall -fdata-sections -ffunction-sections
+ASFLAGS=$(MCU) -g -Og -c -Wall -fdata-sections -ffunction-sections
 CFLAGS=$(MCU) $(OPT) $(INCLUDE) $(DEFS)
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2
@@ -54,7 +54,7 @@ BUILDOBJS=$(patsubst %,$(BUILDDIR)/%,$(OBJS))
 LDSCRIPT = STM32F103XB_FLASH.ld
 LIBS=-lc -lm -lnosys
 LIBDIR=
-LDFLAGS=$(MCU) -specs=nosys.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(TARGET).map,--cref,--gc-sections
+LDFLAGS=$(MCU) -specs=nosys.specs -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(TARGET).map,--cref,--gc-sections
 
 all: $(TARGET).bin
 
@@ -62,7 +62,8 @@ clean:
 	$(RM) -rf *.d *.o *.obj *.map $(TARGET).elf $(TARGET).hex $(TARGET).bin build/*
 
 flash: $(TARGET).bin
-	$(FLASH) --format binary write $(TARGET).bin 0x08000000
+	$(FLASH) reset
+	$(FLASH) --reset write $(TARGET).bin 0x08000000
 
 $(TARGET).hex: $(TARGET).elf
 	$(HEX) $< $@
