@@ -14,14 +14,15 @@ BIN=$(CP) -O binary -S
 CUBE=cubeF1
 BUILDDIR=build
 FLASH=st-flash
+STPROG=/home/joya/bin/stprog
 
 # Names: 1st used for startup.s files, 2nd for driver directory, 3rd for specific system_stm32fxxxyz.c file and HAL device header file
 arch_short=stm32f1xx
 ARCH_short=STM32F1xx
 arch_specific=stm32f103xb
-MCU=-mcpu=cortex-m4 -mthumb
+MCU=-mcpu=cortex-m3 -mthumb -mfloat-abi=soft
 DEFS = -DSTM32F103xB
-OPT = -Og
+OPT = -O0
 
 INCLUDE= -I. -I$(CUBE)/Drivers/CMSIS/Device/ST/$(ARCH_short)/Include -I$(CUBE)/Drivers/CMSIS/Core/Include -I$(CUBE)/Drivers/CMSIS/Include
 ifeq ($(HAL),1)
@@ -29,19 +30,23 @@ HALDIR=$(CUBE)/Drivers/$(ARCH_short)_HAL_Driver
 HALINCLDIR=$(HALDIR)/Inc
 HALSRCDIR=$(HALDIR)/Src
 INCLUDE += -I$(HALINCLDIR)
-HALMODULES = cortex tim tim_ex gpio dac dma rcc
+HALMODULES = cortex tim tim_ex gpio gpio_ex flash flash_ex dac pwr dma rcc rcc_ex exti
 LLMODULES = gpio
 ifneq ($(LLMODULES),)
-DEFS += -DUSE_FULL_LL_DRIVER
+DEFS += -DUSE_HAL_DRIVER -DUSE_FULL_LL_DRIVER
 endif
 HALOBJS = $(arch_short)_hal.o $(patsubst %,$(arch_short)_hal_%.o,$(HALMODULES)) $(patsubst %,$(arch_short)_ll_%.o,$(LLMODULES))
 endif
 
+ifeq ($(DEBUG),1)
+DEFS += -DDEBUG
+endif
 
-ASFLAGS=$(MCU) -g -Og -c -Wall -fdata-sections -ffunction-sections
-CFLAGS=$(MCU) $(OPT) $(INCLUDE) $(DEFS)
+
+ASFLAGS=$(MCU) -g -Og -c -Wall -fdata-sections -ffunction-sections -fstack-usage
+CFLAGS=$(MCU) $(OPT) $(INCLUDE) $(DEFS) --specs=nano.specs
 ifeq ($(DEBUG), 1)
-CFLAGS += -g -gdwarf-2
+CFLAGS += -g3 -gdwarf-2
 endif
 
 CPPFLAGS = $(CFLAGS)
@@ -52,14 +57,17 @@ OBJS=$(CPPSRC:.cpp=.obj) $(CSRC:.c=.o) startup_$(arch_specific).o system_$(arch_
 BUILDOBJS=$(patsubst %,$(BUILDDIR)/%,$(OBJS))
 
 LDSCRIPT = STM32F103XB_FLASH.ld
-LIBS=-lc -lm -lnosys
+LIBS=-lc -lm
 LIBDIR=
-LDFLAGS=$(MCU) -specs=nosys.specs -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(TARGET).map,--cref,--gc-sections
+LDFLAGS=$(MCU) -specs=nosys.specs -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(TARGET).map,--cref,--gc-sections,--start-group,--end-group -static
 
 all: $(TARGET).bin
 
 clean:
 	$(RM) -rf *.d *.o *.obj *.map $(TARGET).elf $(TARGET).hex $(TARGET).bin build/*
+
+prog: $(TARGET).bin
+	$(STPROG) -c port=SWD mode=UR -w $(TARGET).bin 0x8000000 -rst
 
 flash: $(TARGET).bin
 	$(FLASH) reset

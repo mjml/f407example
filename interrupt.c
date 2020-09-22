@@ -13,10 +13,10 @@ void SysTick_Handler (void)
  */
 void TIM2_IRQHandler (void)
 {
-    if (TIM2->SR & TIM_SR_UIF) {
-        TIM2->SR &= ~TIM_SR_UIF;
-        LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
-    }
+  if (TIM2->SR & TIM_SR_UIF) {
+    TIM2->SR &= ~TIM_SR_UIF;
+    LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
+  }
 }
 
 void NMI_Handler(void)
