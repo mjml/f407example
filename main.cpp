@@ -87,8 +87,7 @@ void init_gpio ()
 	c13.Mode = LL_GPIO_MODE_OUTPUT;
 	c13.Pull = 0;
 	LL_GPIO_Init(GPIOC, &c13);
-	LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_13);
-	//LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_13);
+	LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_13);
 }
 
 extern "C" void TIM2_IRQHandler(void);
@@ -125,7 +124,7 @@ void init_timer ()
 	TIM2->CCER = TIM_CCER_CC1E; // CC1 enabled
 
 	// Eg: LL version of HAL_TIM_MspPostInit 
-	/*
+	
 	LL_GPIO_InitTypeDef a0;
 	a0.Pin = LL_GPIO_PIN_0;
 	a0.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
@@ -133,12 +132,7 @@ void init_timer ()
 	a0.Mode = LL_GPIO_MODE_ALTERNATE;
 	a0.Pull = 0;
 	LL_GPIO_Init(GPIOA, &a0);
-	*/
-	GPIO_InitTypeDef GPIO_InitStruct = {0};
-	GPIO_InitStruct.Pin = GPIO_PIN_0;
-	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+	
 
 	// Eg: reg version of HAL_TIM_PWM_Start_IT(htim2,TIM_CHANNEL_1)
 	//TIM2->DIER = TIM_DIER_UIE | TIM_DIER_CC1IE; 
