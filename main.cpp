@@ -127,8 +127,8 @@ void init_timer ()
 	TIM2->SMCR = 0x0; // defaults: Non-inverted external trigger, no external clock, ET prescaler off, no ET filter, No MSM, No TS, No Slave mode
 
 	// Eg: HAL_TIM_PWM_ConfigChannel
-	TIM2->CR2 = 0x0;   // defaults: CH1 connected to TI1, MM reset, CCx DMA on CCx event
-	TIM2->CCMR1 = 0x0; // defaults: ETP non-inverted, EC mode 2 disabled, ET prescaler off, ET filter off
+	TIM2->CR2 = 0x0;    // defaults: ETP non-inverted, EC mode 2 disabled, ET prescaler off, ET filter off
+	TIM2->CCMR1 = TIM_CCMR1_OC1M_2 | TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_0;  // defaults: CH1 connected to TI1, MM reset, CCx DMA on CCx event
 	TIM2->CCR1 = period / 2;
 	TIM2->CCER = TIM_CCER_CC1E; // CC1 enabled
 
