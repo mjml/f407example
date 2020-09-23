@@ -16,11 +16,6 @@ void init_timer();
 
 int main (void)
 {
-	__enable_irq();
-	__set_PRIMASK(0);
-	__set_BASEPRI(0);
-	
-
 	HAL_Init();
 
 	init_interrupts();
@@ -28,9 +23,6 @@ int main (void)
 	init_gpio();
 	init_timer();
 
-	__enable_irq();
-	
-	
 	while (1) {
 		/*
 		if (toggle_led) {
