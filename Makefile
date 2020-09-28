@@ -24,18 +24,20 @@ MCU=-mcpu=cortex-m3 -mthumb -mfloat-abi=soft
 DEFS = -DSTM32F103xB
 OPT = -O0
 
-INCLUDE= -I. -I$(CUBE)/Drivers/CMSIS/Device/ST/$(ARCH_short)/Include -I$(CUBE)/Drivers/CMSIS/Core/Include -I$(CUBE)/Drivers/CMSIS/Include
 ifeq ($(HAL),1)
+INCLUDE= -I. -I$(CUBE)/Drivers/CMSIS/Device/ST/$(ARCH_short)/Include -I$(CUBE)/Drivers/CMSIS/Core/Include -I$(CUBE)/Drivers/CMSIS/Include
 HALDIR=$(CUBE)/Drivers/$(ARCH_short)_HAL_Driver
 HALINCLDIR=$(HALDIR)/Inc
 HALSRCDIR=$(HALDIR)/Src
 INCLUDE += -I$(HALINCLDIR)
-HALMODULES = cortex tim tim_ex gpio gpio_ex flash flash_ex dac pwr dma rcc rcc_ex exti
-LLMODULES = gpio
+#HALMODULES = cortex tim tim_ex gpio gpio_ex flash flash_ex dac pwr dma rcc rcc_ex exti
+LLMODULES = gpio tim rcc utils pwr
 ifneq ($(LLMODULES),)
-DEFS += -DUSE_HAL_DRIVER -DUSE_FULL_LL_DRIVER
+#DEFS += -DUSE_HAL_DRIVER -DUSE_FULL_LL_DRIVER
+DEFS += -DUSE_FULL_LL_DRIVER
 endif
-HALOBJS = $(arch_short)_hal.o $(patsubst %,$(arch_short)_hal_%.o,$(HALMODULES)) $(patsubst %,$(arch_short)_ll_%.o,$(LLMODULES))
+#HALOBJS = $(arch_short)_hal.o $(patsubst %,$(arch_short)_hal_%.o,$(HALMODULES)) $(patsubst %,$(arch_short)_ll_%.o,$(LLMODULES))
+HALOBJS = $(patsubst %,$(arch_short)_hal_%.o,$(HALMODULES)) $(patsubst %,$(arch_short)_ll_%.o,$(LLMODULES))
 endif
 
 ifeq ($(DEBUG),1)
@@ -79,9 +81,9 @@ $(TARGET).hex: $(TARGET).elf
 $(TARGET).bin: $(TARGET).elf
 	$(BIN) $< $@
 
-$(TARGET).elf: $(BUILDOBJS)
-	$(CC) $(LDFLAGS) -o $@ $^
-	$(SZ) $@
+$(TARGET).elf $(TARGET).map: $(BUILDOBJS)
+	$(CC) $(LDFLAGS) -o $(TARGET).elf $^
+	$(SZ) $(TARGET).elf
 
 $(BUILDDIR)/%.d: %.cpp
 	;
@@ -89,7 +91,7 @@ $(BUILDDIR)/%.d: %.cpp
 $(BUILDDIR)/%.d: %.c
 	;
 
-$(BUILDDIR)/%.obj: %.cpp 
+$(BUILDDIR)/%.obj: %.cpp
 	$(CPP) $(CPPFLAGS) -o $@ -c $<
 
 $(BUILDDIR)/%.o: %.c
@@ -101,6 +103,6 @@ $(BUILDDIR)/%.o: %.s
 $(BUILDDIR)/%.o: $(HALSRCDIR)/%.c
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-.PHONY: clean all flash
+.PHONY: clean all flash prog all
 
 -include $(wildcard $(BUILD_DIR)/*.d)

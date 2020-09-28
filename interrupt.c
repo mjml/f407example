@@ -1,22 +1,21 @@
 #include <stm32f1xx_hal.h>
 #include <stm32f1xx_ll_gpio.h>
+#include <stm32f1xx_ll_tim.h>
+#include "squeeze.h"
 
 int toggle_led = 0;
 
-void SysTick_Handler (void)
-{
-    HAL_IncTick();
-}
 
 /**
  * Fired at the sampling frequency 
  */
 void TIM2_IRQHandler (void)
 {
-  if (TIM2->SR & TIM_SR_UIF) {
-    TIM2->SR &= ~TIM_SR_UIF;
+  if (LL_TIM_IsActiveFlag_UPDATE(TIM2)) { // update event
+    LL_TIM_ClearFlag_UPDATE(TIM2);
     LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
   }
+
 }
 
 void NMI_Handler(void)

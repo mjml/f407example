@@ -1,25 +1,24 @@
 
 #include <stdint.h>
 #include <stm32f103xb.h>
-#include <stm32f1xx_hal.h>
-
+#include <stm32f1xx_ll_bus.h>
+#include <stm32f1xx_ll_pwr.h>
+#include <stm32f1xx_ll_utils.h>
+#include <stm32f1xx_ll_cortex.h>
+#include <stm32f1xx_ll_system.h>
+#include <stm32f1xx_ll_rcc.h>
 #include <stm32f1xx_ll_gpio.h>
 #include <stm32f1xx_ll_tim.h>
-#include <stm32f1xx_ll_cortex.h>
 
-#include "chirp.h"
+#include "main.h"
 
-void init_interrupts();
 void init_clocks();
 void init_gpio();
 void init_timer();
 
 int main (void)
 {
-	HAL_Init();
-
-	init_interrupts();
-	init_clocks();
+	init_clocks();  // I.e.:this is really just SystemClock_Config() as in the LL examples
 	init_gpio();
 	init_timer();
 
@@ -35,39 +34,42 @@ int main (void)
 }
 
 
-void init_interrupts ()
-{
-	
-}
-
 /**
  * Set up clocks (basically stolen from the MSP main.c)
  */ 
 void init_clocks ()
 {
-	// E.g.: HAL_Init() /-> HAL_MspInit()
-	__HAL_RCC_AFIO_CLK_ENABLE();
-	__HAL_RCC_PWR_CLK_ENABLE();
-	__HAL_AFIO_REMAP_SWJ_NOJTAG();
-		
-	// E.g.: SystemClock_Config()
-	RCC_OscInitTypeDef osc;
-	osc.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-	osc.HSEState = RCC_HSE_ON;
-	osc.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
-	osc.HSIState = RCC_HSI_ON;
-	osc.PLL.PLLState = RCC_PLL_ON;
-	osc.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-	osc.PLL.PLLMUL = RCC_PLL_MUL9;
-	HAL_RCC_OscConfig(&osc);
+	auto cfgr = RCC->CFGR;
+	cfgr &= 0x7 << RCC_CFGR_MCO_Pos;
+	cfgr |= 0x6 << RCC_CFGR_MCO_Pos;
+	RCC->CFGR = cfgr;
+	RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_AFIOEN;
+    GPIOA->CRH &= ~0X0000000F;
+    GPIOA->CRH |=  0X0000000B;
 
-	RCC_ClkInitTypeDef clk;
-	clk.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
-	clk.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-	clk.AHBCLKDivider = RCC_SYSCLK_DIV1;
-	clk.APB1CLKDivider = RCC_HCLK_DIV2;
-	clk.APB2CLKDivider = RCC_HCLK_DIV1;
-	HAL_RCC_ClockConfig(&clk, FLASH_LATENCY_2);
+	LL_FLASH_SetLatency(LL_FLASH_LATENCY_2);
+
+	LL_RCC_HSE_Enable();
+	while (LL_RCC_HSE_IsReady() == 0) {};
+
+	LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSE_DIV_1,LL_RCC_PLL_MUL_9);
+	LL_RCC_PLL_Enable();
+	while (LL_RCC_PLL_IsReady() == 0) {};
+
+	LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
+	LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_2);
+	LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_1);
+
+	LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
+
+	SystemCoreClockUpdate();
+
+	LL_Init1msTick(TICK_RATE);
+
+	LL_SetSystemCoreClock(TICK_RATE);
+
+	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2);
+	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOA);
 
 }
 
@@ -75,72 +77,53 @@ void init_clocks ()
  * Set up GPIOC so that we can blink an LED to test
  */
 void init_gpio ()
-{
-	__HAL_RCC_GPIOD_CLK_ENABLE();
-	__HAL_RCC_GPIOC_CLK_ENABLE();
-	__HAL_RCC_GPIOA_CLK_ENABLE();
-
+{	
 	LL_GPIO_InitTypeDef c13;
 	c13.Pin = LL_GPIO_PIN_13;
 	c13.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
 	c13.Speed = LL_GPIO_MODE_OUTPUT_2MHz;
 	c13.Mode = LL_GPIO_MODE_OUTPUT;
-	c13.Pull = 0;
 	LL_GPIO_Init(GPIOC, &c13);
-	LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_13);
+	LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_13);
 }
-
-extern "C" void TIM2_IRQHandler(void);
 
 /**
  * Set up TIM2 as a PWM device
  */
 void init_timer ()
 {
-	// determine our period from the desired sampling rate:
-	uint32_t f = 5;                              // PWM frequency 5Hz
-	uint32_t tick_rate = 10000;                  // Timer ticks per period
-	uint16_t period = static_cast<uint16_t> (tick_rate / f);
-
-	// Eg: HAL_TIM_PWM_Init /-> HAL_TIM_PWM_MspInit()
-	__HAL_RCC_TIM2_CLK_ENABLE();
-	HAL_NVIC_SetPriority(TIM2_IRQn, 0, 0);
-	HAL_NVIC_EnableIRQ(TIM2_IRQn);	
-
-	// Eg: HAL_TIM_PWM_Init /-> TIM_Base_SetConfig
-	TIM2->CR1 = 0x0; // defaults: no division, no ARR preload, edge-aligned, up-count, repeat counter, UEV by default methods, UEV enabled, counter disabled
-	TIM2->ARR = period - 1; // Auto-reload period
-	TIM2->PSC = 7200;       // Prescaler
-	TIM2->EGR = TIM_EGR_UG; // Force update (to load the prescaler)
-
-    // Eg: HAL_TIMEx_MasterConfigSynchronization
-	TIM2->CR2 = 0x0; // defaults: CH1 connected to TI1, Master mode reset, DMA req on CCx event
-	TIM2->SMCR = 0x0; // defaults: Non-inverted external trigger, no external clock, ET prescaler off, no ET filter, No MSM, No TS, No Slave mode
-
-	// Eg: HAL_TIM_PWM_ConfigChannel
-	TIM2->CR2 = 0x0;    // defaults: ETP non-inverted, EC mode 2 disabled, ET prescaler off, ET filter off
-	TIM2->CCMR1 = TIM_CCMR1_OC1M_2 | TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_0;  // defaults: CH1 connected to TI1, MM reset, CCx DMA on CCx event
-	TIM2->CCR1 = period / 2;
-	TIM2->CCER = TIM_CCER_CC1E; // CC1 enabled
-
-	// Eg: LL version of HAL_TIM_MspPostInit 
+	uint32_t basefreq = 5;				// PWM frequency 5Hz
+	uint32_t tick_rate = 10000; // Timer ticks per period
+	uint16_t period = static_cast<uint16_t>(tick_rate / basefreq);
 	
-	LL_GPIO_InitTypeDef a0;
-	a0.Pin = LL_GPIO_PIN_0;
-	a0.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-	a0.Speed = LL_GPIO_MODE_OUTPUT_2MHz;
-	a0.Mode = LL_GPIO_MODE_ALTERNATE;
-	a0.Pull = 0;
-	LL_GPIO_Init(GPIOA, &a0);
-	
+	{ // Defines a 10000Hz/5Hz base timer
+		
+		LL_TIM_InitTypeDef tim2;
+		LL_TIM_StructInit(&tim2);
+		tim2.Autoreload = period - 1;
+		tim2.Prescaler = TICK_RATE / tick_rate;
+		tim2.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
+		tim2.CounterMode = LL_TIM_COUNTERMODE_UP;
+		LL_TIM_Init(TIM2, &tim2);
 
-	// Eg: reg version of HAL_TIM_PWM_Start_IT(htim2,TIM_CHANNEL_1)
-	//TIM2->DIER = TIM_DIER_UIE | TIM_DIER_CC1IE; 
-	TIM2->DIER = TIM_DIER_UIE; // Note: interrupt on CC1 match	
+		LL_TIM_OC_InitTypeDef oc2;
+		LL_TIM_OC_StructInit(&oc2);
+		oc2.CompareValue = period / 2;
+		oc2.OCMode = LL_TIM_OCMODE_PWM2;
+		oc2.OCState = LL_TIM_OCSTATE_ENABLE;
+		oc2.OCPolarity = LL_TIM_OCPOLARITY_HIGH;
+		LL_TIM_OC_Init(TIM2, LL_TIM_CHANNEL_CH1, &oc2);
+		LL_TIM_OC_ConfigOutput(TIM2, LL_TIM_CHANNEL_CH1, LL_TIM_OCPOLARITY_HIGH);
 
-	// Eg: TIM_CCxChannelCmd(htim->Instance, Channel, TIM_CCx_ENABLE)
-	TIM2->CCER = TIM_CCER_CC1E;  // Enable output channel 1
-	TIM2->CR1 |= TIM_CR1_CEN;    // Enable the timer
-    
+		LL_GPIO_InitTypeDef a0; // PA0 is TIM2.CH1
+		LL_GPIO_StructInit(&a0);
+		a0.Pin = LL_GPIO_PIN_0;
+		a0.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+		a0.Speed = LL_GPIO_MODE_OUTPUT_2MHz;
+		a0.Mode = LL_GPIO_MODE_ALTERNATE;
+		LL_GPIO_Init(GPIOA, &a0);
+		LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_0);
+
+		LL_TIM_EnableCounter(TIM2);
+	}
 }
-
