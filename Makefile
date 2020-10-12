@@ -25,19 +25,27 @@ DEFS = -DSTM32F103xB
 OPT = -O0
 
 ifeq ($(HAL),1)
-INCLUDE= -I. -I$(CUBE)/Drivers/CMSIS/Device/ST/$(ARCH_short)/Include -I$(CUBE)/Drivers/CMSIS/Core/Include -I$(CUBE)/Drivers/CMSIS/Include
+INCLUDE= -I. -I$(CUBE)/Drivers/CMSIS/Device/ST/$(ARCH_short)/Include -I$(CUBE)/Drivers/CMSIS/Core/Include -I$(CUBE)/Drivers/CMSIS/Include \
+             -I$(CUBE)/Middlewares/ST/STM32_USB_Device_Library/Core/Inc \
+             -I$(CUBE)/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc
 HALDIR=$(CUBE)/Drivers/$(ARCH_short)_HAL_Driver
 HALINCLDIR=$(HALDIR)/Inc
 HALSRCDIR=$(HALDIR)/Src
 INCLUDE += -I$(HALINCLDIR)
 #HALMODULES = cortex tim tim_ex gpio gpio_ex flash flash_ex dac pwr dma rcc rcc_ex exti
+USBMODULES = usbd_core usbd_ctlreq usbd_req usbd_ioreq
+CDCMODULES = usbd_cdc
 LLMODULES = gpio tim rcc utils pwr
 ifneq ($(LLMODULES),)
-#DEFS += -DUSE_HAL_DRIVER -DUSE_FULL_LL_DRIVER
-DEFS += -DUSE_FULL_LL_DRIVER
+DEFS += -DUSE_FULL_LL_DRIVER -DSWO_DEBUG
 endif
 #HALOBJS = $(arch_short)_hal.o $(patsubst %,$(arch_short)_hal_%.o,$(HALMODULES)) $(patsubst %,$(arch_short)_ll_%.o,$(LLMODULES))
 HALOBJS = $(patsubst %,$(arch_short)_hal_%.o,$(HALMODULES)) $(patsubst %,$(arch_short)_ll_%.o,$(LLMODULES))
+endif
+
+ifeq ($(USBDEV),1)
+USBCOREDIR=$(CUBE)/Middlewares/ST/STM32_USB_Device_Library/Core/Src
+USBCDCDIR=$(CUBE)/Middlewares/ST/STM32_USB_Device_Library/CDC/Src
 endif
 
 ifeq ($(DEBUG),1)
@@ -101,6 +109,12 @@ $(BUILDDIR)/%.o: %.s
 	$(AS) $(ASFLAGS) -o $@ -c $<
 
 $(BUILDDIR)/%.o: $(HALSRCDIR)/%.c
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+$(BUILDDIR)/%.o: $(USBCORESRCDIR)/%.c
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+$(BUILDDIR)/%.o: $(USBCLASSSRCDIR)/%.c
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 .PHONY: clean all flash prog all

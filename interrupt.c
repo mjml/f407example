@@ -1,7 +1,6 @@
 #include <stm32f1xx_hal.h>
 #include <stm32f1xx_ll_gpio.h>
 #include <stm32f1xx_ll_tim.h>
-#include "squeeze.h"
 
 int toggle_led = 0;
 
