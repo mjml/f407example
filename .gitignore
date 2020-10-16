@@ -6,3 +6,8 @@
 *.elf
 *.hex
 *.bin
+build
+.project
+.vscode
+swout.txt
+squeezer.code-workspace

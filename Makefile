@@ -56,7 +56,7 @@ endif
 ASFLAGS=$(MCU) -g -Og -c -Wall -fdata-sections -ffunction-sections -fstack-usage
 CFLAGS=$(MCU) $(OPT) $(INCLUDE) $(DEFS) --specs=nano.specs
 ifeq ($(DEBUG), 1)
-CFLAGS += -g3 -gdwarf-2
+CFLAGS += -g
 endif
 
 CPPFLAGS = $(CFLAGS)
@@ -74,7 +74,8 @@ LDFLAGS=$(MCU) -specs=nosys.specs -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LI
 all: $(TARGET).bin
 
 clean:
-	$(RM) -rf *.d *.o *.obj *.map $(TARGET).elf $(TARGET).hex $(TARGET).bin build/*
+	$(RM) -rf *.d *.o *.obj *.map $(TARGET).elf $(TARGET).hex $(TARGET).bin build/* swout.txt
+	touch swout.txt
 
 prog: $(TARGET).bin
 	$(STPROG) -c port=SWD mode=UR -w $(TARGET).bin 0x8000000 -rst

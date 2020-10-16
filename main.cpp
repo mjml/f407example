@@ -21,6 +21,7 @@ void init_timer();
 int main (void)
 {
 	init_clocks();  // I.e.:this is really just SystemClock_Config() as in the LL examples
+	init_debug();
 	init_gpio();
 	init_timer();
 
@@ -33,6 +34,7 @@ int main (void)
 			LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
 		}
 		*/
+		LL_mDelay(2000);
 		
 	}
 }
@@ -74,7 +76,6 @@ void init_clocks ()
 
 	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2);
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOA);
-
 }
 
 
@@ -89,6 +90,7 @@ void init_debug ()
 	TPI->CSPSR = 0x1;  // set port size to 1
 	TPI->FFCR = 0x102; // enable the TPIU formatter
 	TPI->SPPR = 0x0;   // set "trace port mode" protocol (not Manchester or NRZ)
+	TPI->ACPR = 72000000 / 1000000;
 	
 	// Configure the DBGMCU
 	LL_DBGMCU_SetTracePinAssignment(LL_DBGMCU_TRACE_ASYNCH);
