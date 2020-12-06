@@ -34,7 +34,6 @@ HALINCLDIR=$(HALDIR)/Inc
 HALSRCDIR=$(HALDIR)/Src
 INCLUDE += -I$(HALINCLDIR)
 HALMODULES = cortex tim tim_ex gpio gpio_ex flash flash_ex dac pwr dma rcc rcc_ex exti
-USBMODULES = usbd_core usbd_ctlreq usbd_req usbd_ioreq
 CDCMODULES = usbd_cdc
 LLMODULES = gpio tim rcc utils pwr
 ifneq ($(LLMODULES),)
@@ -44,8 +43,10 @@ HALOBJS = $(patsubst %,$(arch_short)_hal_%.o,$(HALMODULES)) $(patsubst %,$(arch_
 endif
 
 ifeq ($(USBDEV),1)
+USBMODULES = usbd_core usbd_ctlreq usbd_req usbd_ioreq
 USBCOREDIR=$(CUBE)/Middlewares/ST/STM32_USB_Device_Library/Core/Src
 USBCDCDIR=$(CUBE)/Middlewares/ST/STM32_USB_Device_Library/CDC/Src
+USBOBJS=$(foreach mod,$(USBMODULES),$(BUILDDIR)/$mod.o)
 endif
 
 ifeq ($(DEBUG),1)
