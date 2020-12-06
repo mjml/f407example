@@ -29,9 +29,9 @@
 #define USBD_VID                      0x0483
 #define USBD_PID                      0xaaaa  /* Replace '0xaaaa' with your device product ID */
 #define USBD_LANGID_STRING            0xbbb  /* Replace '0xbbb' with your device language ID */
-#define USBD_MANUFACTURER_STRING      "xxxxx" /* Add your manufacturer string */
-#define USBD_PRODUCT_HS_STRING        "xxxxx" /* Add your product High Speed string */
-#define USBD_PRODUCT_FS_STRING        "xxxxx" /* Add your product Full Speed string */
+#define USBD_MANUFACTURER_STRING      "michaeljoya.com" /* Add your manufacturer string */
+#define USBD_PRODUCT_HS_STRING        "squeezer test program HS" /* Add your product High Speed string */
+#define USBD_PRODUCT_FS_STRING        "squeezer test program FS" /* Add your product Full Speed string */
 #define USBD_CONFIGURATION_HS_STRING  "xxxxx" /* Add your configuration High Speed string */
 #define USBD_INTERFACE_HS_STRING      "xxxxx" /* Add your Interface High Speed string */
 #define USBD_CONFIGURATION_FS_STRING  "xxxxx" /* Add your configuration Full Speed string */
