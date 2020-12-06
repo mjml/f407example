@@ -1,4 +1,4 @@
-TARGET=squeezer
+TARGET=barehal
 HAL=1
 DEBUG=1
 CPPSRC=$(shell ls *.cpp)
@@ -11,7 +11,8 @@ CP=arm-none-eabi-objcopy
 SZ=arm-none-eabi-size
 HEX=$(CP) -O ihex
 BIN=$(CP) -O binary -S
-CUBE=cubeF1
+
+CUBE=ext/cubef1
 BUILDDIR=build
 FLASH=st-flash
 STPROG=/home/joya/bin/stprog
@@ -32,14 +33,13 @@ HALDIR=$(CUBE)/Drivers/$(ARCH_short)_HAL_Driver
 HALINCLDIR=$(HALDIR)/Inc
 HALSRCDIR=$(HALDIR)/Src
 INCLUDE += -I$(HALINCLDIR)
-#HALMODULES = cortex tim tim_ex gpio gpio_ex flash flash_ex dac pwr dma rcc rcc_ex exti
+HALMODULES = cortex tim tim_ex gpio gpio_ex flash flash_ex dac pwr dma rcc rcc_ex exti
 USBMODULES = usbd_core usbd_ctlreq usbd_req usbd_ioreq
 CDCMODULES = usbd_cdc
 LLMODULES = gpio tim rcc utils pwr
 ifneq ($(LLMODULES),)
 DEFS += -DUSE_FULL_LL_DRIVER -DSWO_DEBUG
 endif
-#HALOBJS = $(arch_short)_hal.o $(patsubst %,$(arch_short)_hal_%.o,$(HALMODULES)) $(patsubst %,$(arch_short)_ll_%.o,$(LLMODULES))
 HALOBJS = $(patsubst %,$(arch_short)_hal_%.o,$(HALMODULES)) $(patsubst %,$(arch_short)_ll_%.o,$(LLMODULES))
 endif
 
@@ -59,9 +59,7 @@ ifeq ($(DEBUG), 1)
 CFLAGS += -g
 endif
 
-CPPFLAGS = $(CFLAGS)
-CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
-CPPFLAGS += -MMD -MP -MF"$(@:%.obj=%.d)"
+CPPFLAGS = $(CFLAGS) -std=c++17
 
 OBJS=$(CPPSRC:.cpp=.obj) $(CSRC:.c=.o) startup_$(arch_specific).o system_$(arch_short).o $(HALOBJS)
 BUILDOBJS=$(patsubst %,$(BUILDDIR)/%,$(OBJS))
@@ -71,52 +69,55 @@ LIBS=-lc -lm
 LIBDIR=
 LDFLAGS=$(MCU) -specs=nosys.specs -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(TARGET).map,--cref,--gc-sections,--start-group,--end-group -static
 
-all: $(TARGET).bin
+all: $(BUILDDIR)/$(TARGET).bin
 
 clean:
 	$(RM) -rf *.d *.o *.obj *.map $(TARGET).elf $(TARGET).hex $(TARGET).bin build/* swout.txt
 	touch swout.txt
 
-prog: $(TARGET).bin
-	$(STPROG) -c port=SWD mode=UR -w $(TARGET).bin 0x8000000 -rst
+prog: $(BUILDDIR)/$(TARGET).bin
+	$(STPROG) -c port=SWD mode=UR -w  $(BUILDDIR)/$(TARGET).bin 0x8000000 -rst
 
-flash: $(TARGET).bin
+flash:  $(BUILDDIR)/$(TARGET).bin
 	$(FLASH) reset
-	$(FLASH) --reset write $(TARGET).bin 0x08000000
+	$(FLASH) --reset write $(BUILDDIR)/$(TARGET).bin 0x08000000
 
-$(TARGET).hex: $(TARGET).elf
+$(BUILDDIR)/$(TARGET).hex: $(BUILDDIR)/$(TARGET).elf
 	$(HEX) $< $@
 
-$(TARGET).bin: $(TARGET).elf
+$(BUILDDIR)/$(TARGET).bin: $(BUILDDIR)/$(TARGET).elf
 	$(BIN) $< $@
 
-$(TARGET).elf $(TARGET).map: $(BUILDOBJS)
-	$(CC) $(LDFLAGS) -o $(TARGET).elf $^
-	$(SZ) $(TARGET).elf
+$(BUILDDIR)/$(TARGET).elf $(TARGET).map: $(BUILDOBJS)
+	$(CC) $(LDFLAGS) -o  $(BUILDDIR)/$(TARGET).elf $^
+	$(SZ)  $(BUILDDIR)/$(TARGET).elf
 
-$(BUILDDIR)/%.d: %.cpp
-	;
+$(BUILDDIR)/%.d: %.cpp $(BUILDDIR)
+	$(CPP) $(CPPFLAGS) -MMD -MP -MF"$(@:%.o=%.d)" -c $< -o $@
 
-$(BUILDDIR)/%.d: %.c
-	;
+$(BUILDDIR)/%.d: %.c $(BUILDDIR)
+	$(CC) $(CFLAGS) -MMD -MP -MF"$(@:%.o=%.d)" -c $< -o $@
 
-$(BUILDDIR)/%.obj: %.cpp
+$(BUILDDIR)/%.obj: %.cpp $(BUILDDIR)
 	$(CPP) $(CPPFLAGS) -o $@ -c $<
 
-$(BUILDDIR)/%.o: %.c
+$(BUILDDIR)/%.o: %.c $(BUILDDIR)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-$(BUILDDIR)/%.o: %.s
+$(BUILDDIR)/%.o: %.s $(BUILDDIR)
 	$(AS) $(ASFLAGS) -o $@ -c $<
 
-$(BUILDDIR)/%.o: $(HALSRCDIR)/%.c
+$(BUILDDIR)/%.o: $(HALSRCDIR)/%.c $(BUILDDIR)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-$(BUILDDIR)/%.o: $(USBCORESRCDIR)/%.c
+$(BUILDDIR)/%.o: $(USBCORESRCDIR)/%.c $(BUILDDIR)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-$(BUILDDIR)/%.o: $(USBCLASSSRCDIR)/%.c
+$(BUILDDIR)/%.o: $(USBCLASSSRCDIR)/%.c $(BUILDDIR)
 	$(CC) $(CFLAGS) -o $@ -c $<
+
+$(BUILDDIR):
+	mkdir -p $(BUILDDIR)
 
 .PHONY: clean all flash prog all
 
