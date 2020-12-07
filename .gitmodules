@@ -4,3 +4,6 @@
 [submodule "ext/cmsis5"]
 	path = ext/cmsis5
 	url = https://github.com/ARM-software/CMSIS_5
+[submodule "ext/cubef4"]
+	path = ext/cubef4
+	url = https://github.com/STMicroelectronics/STM32CubeF4
