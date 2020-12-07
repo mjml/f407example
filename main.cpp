@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <stm32f103xb.h>
+#include <stm32f1xx.h>
 #include <stm32f1xx_ll_bus.h>
 #include <stm32f1xx_ll_pwr.h>
 #include <stm32f1xx_ll_utils.h>
