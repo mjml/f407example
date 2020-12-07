@@ -10,4 +10,4 @@ build
 .project
 .vscode
 swout.txt
-squeezer.code-workspace
+*.code-workspace
