@@ -49,7 +49,7 @@ HAL_MODULES = gpio.c rcc.c flash.c tim.c cortex.c pcd.c
 HAL_SOURCES = $(addprefix $(HAL_SRC)/$(arch_short)_hal_,$(HAL_MODULES)) $(HAL_SRC)/$(arch_short)_hal.c
 HAL_OBJECTS = $(addprefix $(BUILDDIR)/hal/,$(notdir $(HAL_SOURCES:.c=.o)))
 
-LL_MODULES = gpio.c
+LL_MODULES = gpio.c tim.c utils.c
 LL_SOURCES = $(addprefix $(HAL_SRC)/$(arch_short)_ll_,$(LL_MODULES))
 LL_OBJECTS = $(addprefix $(BUILDDIR)/hal/,$(notdir $(LL_SOURCES:.c=.o)))
 
@@ -70,7 +70,7 @@ USBCDC_OBJECTS = $(addprefix $(BUILDDIR)/usbcdc/,$(notdir $(USBCDC_MODULES:.c=.o
 USBIMPL_PATH = $(EXT_PATH)/usbimpl
 USBIMPL_SRC = $(USBIMPL_PATH)
 USBIMPL_INCL = $(USBIMPL_PATH)
-USBIMPL_MODULES = usbd_conf.c usbd_desc.c usbd_cdc_if.c usb_device.c
+USBIMPL_MODULES = usbd_conf.c usbd_desc.c usbd_cdc_if.c
 USBIMPL_SOURCES = $(addprefix $(USBIMPL_PATH)/,$(USBCDC_MODULES))
 USBIMPL_OBJECTS = $(addprefix $(BUILDDIR)/usbimpl/,$(USBIMPL_MODULES:.c=.o)) 
 
@@ -141,7 +141,7 @@ $(BUILDDIR)/usb/%.o: $(USB_SRC)/%.c $(BUILDDIR)/usb
 $(BUILDDIR)/usbcdc/%.o: $(USBCDC_SRC)/%.c $(BUILDDIR)/usbcdc
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILDDIR)/usbimpl/%.o: $(USBCDC_SRC)/%.c $(BUILDDIR)/usbimpl
+$(BUILDDIR)/usbimpl/%.o: $(USBIMPL_SRC)/%.c $(BUILDDIR)/usbimpl
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILDDIR):
