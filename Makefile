@@ -45,7 +45,7 @@ CMSIS_DEVICE_OBJECTS = $(addprefix $(BUILDDIR)/cmsis/,$(addsuffix .o,$(notdir $(
 HAL_PATH = $(CUBE_PATH)/Drivers/$(ARCH_short)_HAL_Driver
 HAL_SRC = $(HAL_PATH)/Src
 HAL_INCL = $(HAL_PATH)/Inc
-HAL_MODULES = gpio.c rcc.c flash.c tim.c cortex.c
+HAL_MODULES = gpio.c rcc.c flash.c tim.c cortex.c pcd.c
 HAL_SOURCES = $(addprefix $(HAL_SRC)/$(arch_short)_hal_,$(HAL_MODULES)) $(HAL_SRC)/$(arch_short)_hal.c
 HAL_OBJECTS = $(addprefix $(BUILDDIR)/hal/,$(notdir $(HAL_SOURCES:.c=.o)))
 
