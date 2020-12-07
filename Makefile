@@ -83,8 +83,9 @@ endif
 CFLAGS+=-I$(shell pwd) -I$(EXT_INCL) -I$(CMSIS_ARM_INCL) -I$(CMSIS_DEVICE_INCL) -I$(HAL_INCL) -I$(USB_INCL) -I$(USBCDC_INCL) -I$(USBIMPL_INCL)
 CPPFLAGS=-std=c++11 $(CFLAGS) 
 
-OBJS=$(CPPSRC:.cpp=.obj) $(CSRC:.c=.o) startup_$(arch_specific).o system_$(arch_short).o
-BUILDOBJS=$(patsubst %,$(BUILDDIR)/%,$(OBJS)) $(HAL_OBJECTS) $(LL_OBJECTS) $(USB_OBJECTS) $(USBCDC_OBJECTS) $(USBIMPL_OBJECTS)
+APP_OBJECTS=$(CPPSRC:.cpp=.obj) $(CSRC:.c=.o) startup_$(arch_specific).o system_$(arch_short).o
+
+BUILDOBJS=$(patsubst %,$(BUILDDIR)/%,$(APP_OBJECTS)) $(HAL_OBJECTS) $(LL_OBJECTS) $(USB_OBJECTS) $(USBCDC_OBJECTS) $(USBIMPL_OBJECTS)
 
 LDSCRIPT = STM32F103XB_FLASH.ld
 LIBS=-lc -lm
