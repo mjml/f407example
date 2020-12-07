@@ -83,7 +83,7 @@ endif
 CFLAGS+=-I$(shell pwd) -I$(EXT_INCL) -I$(CMSIS_ARM_INCL) -I$(CMSIS_DEVICE_INCL) -I$(HAL_INCL) -I$(USB_INCL) -I$(USBCDC_INCL) -I$(USBIMPL_INCL)
 CPPFLAGS=-std=c++11 $(CFLAGS) 
 
-APP_OBJECTS=$(patsubst %,$(BUILDDIR)/%,$(CPPSRC:.cpp=.obj) $(CSRC:.c=.o) startup_$(arch_specific).o system_$(arch_short).o)
+APP_OBJECTS=$(patsubst %,$(BUILDDIR)/%,$(CPPSRC:.cpp=.obj) $(CSRC:.c=.o) startup_$(arch_specific).o)
 
 BUILDOBJS=$(APP_OBJECTS) $(HAL_OBJECTS) $(LL_OBJECTS) $(USB_OBJECTS) $(USBCDC_OBJECTS) $(USBIMPL_OBJECTS)
 
@@ -145,23 +145,10 @@ $(BUILDDIR)/usbcdc/%.o: $(USBCDC_SRC)/%.c $(BUILDDIR)/usbcdc
 $(BUILDDIR)/usbimpl/%.o: $(USBIMPL_SRC)/%.c $(BUILDDIR)/usbimpl
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILDDIR):
-	mkdir -p $(BUILDDIR)
+$(BUILDOBJS): | $(BUILDDIR) $(BUILDDIR)/hal $(BUILDDIR)/cmsis $(BUILDDIR)/usb $(BUILDDIR)/usbcdc $(BUILDDIR)/usbimpl
 
-$(BUILDDIR)/hal: $(BUILDDIR)
-	mkdir -p $@
-
-$(BUILDDIR)/cmsis: $(BUILDDIR)
-	mkdir -p $@
-
-$(BUILDDIR)/usb: $(BUILDDIR)
-	mkdir -p $@
-
-$(BUILDDIR)/usbcdc: $(BUILDDIR)
-	mkdir -p $@
-
-$(BUILDDIR)/usbimpl: $(BUILDDIR)
-	mkdir -p $@
+$(BUILDDIR) $(BUILDDIR)/hal $(BUILDDIR)/cmsis $(BUILDDIR)/usb $(BUILDDIR)/usbcdc $(BUILDDIR)/usbimpl:
+	mkdir -p $(BUILDDIR) $(BUILDDIR)/hal $(BUILDDIR)/cmsis $(BUILDDIR)/usb $(BUILDDIR)/usbcdc $(BUILDDIR)/usbimpl
 
 
 
