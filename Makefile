@@ -12,7 +12,6 @@ SZ=arm-none-eabi-size
 HEX=$(CP) -O ihex
 BIN=$(CP) -O binary -S
 
-CUBE=ext/cubef1
 BUILDDIR=build
 FLASH=st-flash
 STPROG=/home/joya/bin/stprog
@@ -22,37 +21,58 @@ arch_short=stm32f1xx
 ARCH_short=STM32F1xx
 arch_specific=stm32f103xb
 MCU=-mcpu=cortex-m3 -mthumb -mfloat-abi=soft
-DEFS = -DSTM32F103xB
+DEFS = -DSTM32 -DSTM32F103xB -DUSE_FULL_LL_DRIVER
 OPT = -O0
 
-ifeq ($(HAL),1)
-INCLUDE= -I. -I$(CUBE)/Drivers/CMSIS/Device/ST/$(ARCH_short)/Include -I$(CUBE)/Drivers/CMSIS/Core/Include -I$(CUBE)/Drivers/CMSIS/Include \
-             -I$(CUBE)/Middlewares/ST/STM32_USB_Device_Library/Core/Inc \
-             -I$(CUBE)/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc
-HALDIR=$(CUBE)/Drivers/$(ARCH_short)_HAL_Driver
-HALINCLDIR=$(HALDIR)/Inc
-HALSRCDIR=$(HALDIR)/Src
-INCLUDE += -I$(HALINCLDIR)
-HALMODULES = cortex tim tim_ex gpio gpio_ex flash flash_ex dac pwr dma rcc rcc_ex exti
-CDCMODULES = usbd_cdc
-LLMODULES = gpio tim rcc utils pwr
-ifneq ($(LLMODULES),)
-DEFS += -DUSE_FULL_LL_DRIVER -DSWO_DEBUG
-endif
-HALOBJS = $(patsubst %,$(arch_short)_hal_%.o,$(HALMODULES)) $(patsubst %,$(arch_short)_ll_%.o,$(LLMODULES))
-endif
+EXT_PATH = $(shell pwd)/ext
+EXT_SRC = $(EXT_PATH)
+EXT_INCL = $(EXT_PATH)
+EXT_MODULES = stm32f4xx_hal_msp.c stm32f4xx_it.c syscalls.c sysmem.c system_stm32f4xx.c
+EXT_OBJECTS = $(addprefix $(BUILDDIR)/,$(notdir $(EXT_MODULES:.c=.o)))
 
-ifeq ($(USBDEV),1)
-USBMODULES = usbd_core usbd_ctlreq usbd_req usbd_ioreq
-USBCOREDIR=$(CUBE)/Middlewares/ST/STM32_USB_Device_Library/Core/Src
-USBCDCDIR=$(CUBE)/Middlewares/ST/STM32_USB_Device_Library/CDC/Src
-USBOBJS=$(foreach mod,$(USBMODULES),$(BUILDDIR)/$mod.o)
-endif
+CUBE_PATH=$(EXT_PATH)/cubef1
 
-ifeq ($(DEBUG),1)
-DEFS += -DDEBUG
-endif
+CMSIS_ARM_PATH = $(CUBE_PATH)/Drivers/CMSIS
+CMSIS_ARM_INCL = $(CMSIS_ARM_PATH)/Include
 
+CMSIS_DEVICE_PATH = $(CMSIS_ARM_PATH)/Device/ST/$(ARCH_short)
+CMSIS_DEVICE_INCL = $(CMSIS_DEVICE_PATH)/Include
+CMSIS_DEVICE_MODULES = system_stm32f4xx.c gcc/startup_stm32f407xx.s
+CMSIS_DEVICE_SRC = $(CMSIS_DEVICE_PATH)/Source/Templates
+CMSIS_DEVICE_SOURCES = $(addprefix $(CMSIS_DEVICE_PATH)/,$(CMSIS_DEVICE_MODULES))
+CMSIS_DEVICE_OBJECTS = $(addprefix $(BUILDDIR)/cmsis/,$(addsuffix .o,$(notdir $(basename $(CMSIS_DEVICE_SOURCES)))))
+
+HAL_PATH = $(CUBE_PATH)/Drivers/$(ARCH_short)_HAL_Driver
+HAL_SRC = $(HAL_PATH)/Src
+HAL_INCL = $(HAL_PATH)/Inc
+HAL_MODULES = gpio.c rcc.c flash.c tim.c cortex.c
+HAL_SOURCES = $(addprefix $(HAL_SRC)/$(arch_short)_hal_,$(HAL_MODULES)) $(HAL_SRC)/$(arch_short)_hal.c
+HAL_OBJECTS = $(addprefix $(BUILDDIR)/hal/,$(notdir $(HAL_SOURCES:.c=.o)))
+
+LL_MODULES = gpio.c
+LL_SOURCES = $(addprefix $(HAL_SRC)/$(arch_short)_ll_,$(LL_MODULES))
+LL_OBJECTS = $(addprefix $(BUILDDIR)/hal/,$(notdir $(LL_SOURCES:.c=.o)))
+
+USB_PATH = $(CUBE_PATH)/Middlewares/ST/STM32_USB_Device_Library
+USB_SRC = $(USB_PATH)/Core/Src
+USB_INCL = $(USB_PATH)/Core/Inc
+USB_MODULES = usbd_core.c usbd_ctlreq.c usbd_ioreq.c
+USB_SOURCES = $(addprefix $(USB_SRC)/,$(USB_MODULES))
+USB_OBJECTS = $(addprefix $(BUILDDIR)/usb/,$(notdir $(USB_SOURCES:.c=.o))) 
+
+USBCDC_PATH = $(USB_PATH)/Class/CDC
+USBCDC_SRC = $(USBCDC_PATH)/Src
+USBCDC_INCL = $(USBCDC_PATH)/Inc
+USBCDC_MODULES = usbd_cdc.c
+USBCDC_SOURCES = $(addprefix $(USBCDC_SRC)/,$(USBCDC_MODULES))
+USBCDC_OBJECTS = $(addprefix $(BUILDDIR)/usbcdc/,$(notdir $(USBCDC_MODULES:.c=.o))) 
+
+USBIMPL_PATH = $(EXT_PATH)/usbimpl
+USBIMPL_SRC = $(USBIMPL_PATH)
+USBIMPL_INCL = $(USBIMPL_PATH)
+USBIMPL_MODULES = usbd_conf.c usbd_desc.c usbd_cdc_if.c usb_device.c
+USBIMPL_SOURCES = $(addprefix $(USBIMPL_PATH)/,$(USBCDC_MODULES))
+USBIMPL_OBJECTS = $(addprefix $(BUILDDIR)/usbimpl/,$(USBIMPL_MODULES:.c=.o)) 
 
 ASFLAGS=$(MCU) -g -Og -c -Wall -fdata-sections -ffunction-sections -fstack-usage
 CFLAGS=$(MCU) $(OPT) $(INCLUDE) $(DEFS) --specs=nano.specs
@@ -60,10 +80,11 @@ ifeq ($(DEBUG), 1)
 CFLAGS += -g
 endif
 
-CPPFLAGS = $(CFLAGS) -std=c++17
+CFLAGS+=-I$(shell pwd) -I$(EXT_INCL) -I$(CMSIS_ARM_INCL) -I$(CMSIS_DEVICE_INCL) -I$(HAL_INCL) -I$(USB_INCL) -I$(USBCDC_INCL) -I$(USBIMPL_INCL)
+CPPFLAGS=-std=c++11 $(CFLAGS) 
 
-OBJS=$(CPPSRC:.cpp=.obj) $(CSRC:.c=.o) startup_$(arch_specific).o system_$(arch_short).o $(HALOBJS)
-BUILDOBJS=$(patsubst %,$(BUILDDIR)/%,$(OBJS))
+OBJS=$(CPPSRC:.cpp=.obj) $(CSRC:.c=.o) startup_$(arch_specific).o system_$(arch_short).o
+BUILDOBJS=$(patsubst %,$(BUILDDIR)/%,$(OBJS)) $(HAL_OBJECTS) $(LL_OBJECTS) $(USB_OBJECTS) $(USBCDC_OBJECTS) $(USBIMPL_OBJECTS)
 
 LDSCRIPT = STM32F103XB_FLASH.ld
 LIBS=-lc -lm
@@ -90,8 +111,8 @@ $(BUILDDIR)/$(TARGET).bin: $(BUILDDIR)/$(TARGET).elf
 	$(BIN) $< $@
 
 $(BUILDDIR)/$(TARGET).elf $(TARGET).map: $(BUILDOBJS)
-	$(CC) $(LDFLAGS) -o  $(BUILDDIR)/$(TARGET).elf $^
-	$(SZ)  $(BUILDDIR)/$(TARGET).elf
+	$(CC) $(LDFLAGS) -o $@ $^
+	$(SZ) $(BUILDDIR)/$(TARGET).elf
 
 $(BUILDDIR)/%.d: %.cpp $(BUILDDIR)
 	$(CPP) $(CPPFLAGS) -MMD -MP -MF"$(@:%.o=%.d)" -c $< -o $@
@@ -100,25 +121,50 @@ $(BUILDDIR)/%.d: %.c $(BUILDDIR)
 	$(CC) $(CFLAGS) -MMD -MP -MF"$(@:%.o=%.d)" -c $< -o $@
 
 $(BUILDDIR)/%.obj: %.cpp $(BUILDDIR)
-	$(CPP) $(CPPFLAGS) -o $@ -c $<
+	$(CPP) $(CPPFLAGS) -c $< -o $@
 
 $(BUILDDIR)/%.o: %.c $(BUILDDIR)
-	$(CC) $(CFLAGS) -o $@ -c $<
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILDDIR)/%.o: %.s $(BUILDDIR)
-	$(AS) $(ASFLAGS) -o $@ -c $<
+	$(AS) $(ASFLAGS) -c $< -o $@
 
-$(BUILDDIR)/%.o: $(HALSRCDIR)/%.c $(BUILDDIR)
-	$(CC) $(CFLAGS) -o $@ -c $<
+$(BUILDDIR)/cmsis/%.o: $(CMSIS_SRC)/%.c $(BUILDDIR)/cmsis
+	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILDDIR)/%.o: $(USBCORESRCDIR)/%.c $(BUILDDIR)
-	$(CC) $(CFLAGS) -o $@ -c $<
+$(BUILDDIR)/hal/%.o: $(HAL_SRC)/%.c $(BUILDDIR)/hal
+	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILDDIR)/%.o: $(USBCLASSSRCDIR)/%.c $(BUILDDIR)
-	$(CC) $(CFLAGS) -o $@ -c $<
+$(BUILDDIR)/usb/%.o: $(USB_SRC)/%.c $(BUILDDIR)/usb
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILDDIR)/usbcdc/%.o: $(USBCDC_SRC)/%.c $(BUILDDIR)/usbcdc
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILDDIR)/usbimpl/%.o: $(USBCDC_SRC)/%.c $(BUILDDIR)/usbimpl
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILDDIR):
 	mkdir -p $(BUILDDIR)
+
+$(BUILDDIR)/hal: $(BUILDDIR)
+	mkdir -p $@
+
+$(BUILDDIR)/cmsis: $(BUILDDIR)
+	mkdir -p $@
+
+$(BUILDDIR)/usb: $(BUILDDIR)
+	mkdir -p $@
+
+$(BUILDDIR)/usbcdc: $(BUILDDIR)
+	mkdir -p $@
+
+$(BUILDDIR)/usbimpl: $(BUILDDIR)
+	mkdir -p $@
+
+
+
+
 
 .PHONY: clean all flash prog all
 
