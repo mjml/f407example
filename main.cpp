@@ -170,3 +170,12 @@ void init_timer ()
 		LL_TIM_EnableCounter(TIM2);
 	}
 }
+
+extern "C" void Error_Handler(void)
+{
+	while(1)
+	{
+		/* Insert a delay */
+		HAL_Delay(50);
+	}
+}
