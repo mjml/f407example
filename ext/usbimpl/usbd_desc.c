@@ -67,7 +67,7 @@
 #define USBD_LANGID_STRING     1033
 #define USBD_MANUFACTURER_STRING     "Hermitude (mjml)"
 #define USBD_PID_HS     22336
-#define USBD_PRODUCT_STRING_HS     "stm32-grbl"
+#define USBD_PRODUCT_STRING_HS     "usbexample server"
 #define USBD_CONFIGURATION_STRING_HS     "CDC Config"
 #define USBD_INTERFACE_STRING_HS     "CDC Interface"
 
@@ -357,7 +357,7 @@ uint8_t * USBD_HS_ConfigStrDescriptor(USBD_SpeedTypeDef speed, uint16_t *length)
   */
 uint8_t * USBD_HS_InterfaceStrDescriptor(USBD_SpeedTypeDef speed, uint16_t *length)
 {
-  if(speed == 0)
+  if(speed == USBD_SPEED_HIGH)
   {
     USBD_GetString((uint8_t *)USBD_INTERFACE_STRING_HS, USBD_StrDesc, length);
   }

@@ -1,0 +1,10 @@
+### TODO ###
+============
+
+* USE_HAL_PCD_REGISTER_CALLBACKS defined or not?
+
+* Examine the USB Core / CDC Layer, the Glue Layer (HAL_PCD_yyyy callbacks and HAL_LL_xxxx functions), and the low-level HAL_PCD and layers
+
+* Find out how to adjust the heap size upward since USB/CDC seems to use a bit more than is normally provided. The f407zet should have plenty.
+
+

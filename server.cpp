@@ -11,6 +11,7 @@ USBD_HandleTypeDef hUsbDeviceHS;
 
 void init_usb_device ()
 {
+	// Pitfall: Consider changing this to full speed. The USB Clock can only go at 48mbit
     USBD_Init( &hUsbDeviceHS, &HS_Desc, DEVICE_HS );
 
 	USBD_RegisterClass( &hUsbDeviceHS, &USBD_CDC );
