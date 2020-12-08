@@ -17,11 +17,11 @@ FLASH=st-flash
 STPROG=/home/joya/bin/stprog
 
 # Names: 1st used for startup.s files, 2nd for driver directory, 3rd for specific system_stm32fxxxyz.c file and HAL device header file
-arch_short=stm32f1xx
-ARCH_short=STM32F1xx
-arch_specific=stm32f103xb
+arch_short=stm32f4xx
+ARCH_short=STM32F4xx
+arch_specific=stm32f407xx
 MCU=-mcpu=cortex-m3 -mthumb -mfloat-abi=soft
-DEFS = -DSTM32 -DSTM32F103xB -DUSE_FULL_LL_DRIVER
+DEFS = -DSTM32 -DSTM32F407xx -DUSE_FULL_LL_DRIVER -DSWO_DEBUG
 OPT = -O0
 
 EXT_PATH = $(shell pwd)/ext
@@ -30,7 +30,7 @@ EXT_INCL = $(EXT_PATH)
 EXT_MODULES = stm32f4xx_hal_msp.c stm32f4xx_it.c syscalls.c sysmem.c system_stm32f4xx.c
 EXT_OBJECTS = $(addprefix $(BUILDDIR)/,$(notdir $(EXT_MODULES:.c=.o)))
 
-CUBE_PATH=$(EXT_PATH)/cubef1
+CUBE_PATH=$(EXT_PATH)/cubef4
 
 CMSIS_ARM_PATH = $(CUBE_PATH)/Drivers/CMSIS
 CMSIS_ARM_INCL = $(CMSIS_ARM_PATH)/Include
