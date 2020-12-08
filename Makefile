@@ -49,7 +49,7 @@ HAL_MODULES = gpio.c rcc.c flash.c tim.c cortex.c pcd.c
 HAL_SOURCES = $(addprefix $(HAL_SRC)/$(arch_short)_hal_,$(HAL_MODULES)) $(HAL_SRC)/$(arch_short)_hal.c
 HAL_OBJECTS = $(addprefix $(BUILDDIR)/hal/,$(notdir $(HAL_SOURCES:.c=.o)))
 
-LL_MODULES = gpio.c tim.c utils.c
+LL_MODULES = gpio.c tim.c utils.c usb.c
 LL_SOURCES = $(addprefix $(HAL_SRC)/$(arch_short)_ll_,$(LL_MODULES))
 LL_OBJECTS = $(addprefix $(BUILDDIR)/hal/,$(notdir $(LL_SOURCES:.c=.o)))
 
@@ -106,12 +106,15 @@ flash:  $(BUILDDIR)/$(TARGET).bin
 	$(FLASH) --reset write $(BUILDDIR)/$(TARGET).bin 0x08000000
 
 $(BUILDDIR)/$(TARGET).hex: $(BUILDDIR)/$(TARGET).elf
+	@echo -e "[\033[1;32m$@\033[0m]"
 	$(HEX) $< $@
 
 $(BUILDDIR)/$(TARGET).bin: $(BUILDDIR)/$(TARGET).elf
+	@echo -e "[\033[1;32m$@\033[0m]"
 	$(BIN) $< $@
 
 $(BUILDDIR)/$(TARGET).elf $(TARGET).map: $(BUILDOBJS)
+	@echo -e "[\033[1;32m$@\033[0m]"
 	$(CC) $(LDFLAGS) -o $@ $^
 	$(SZ) $(BUILDDIR)/$(TARGET).elf
 
@@ -122,32 +125,41 @@ $(BUILDDIR)/%.d: %.c $(BUILDDIR)
 	$(CC) $(CFLAGS) -MMD -MP -MF"$(@:%.o=%.d)" -c $< -o $@
 
 $(BUILDDIR)/%.obj: %.cpp $(BUILDDIR)
+	@echo -e "[\033[1;32m$@\033[0m]"
 	$(CPP) $(CPPFLAGS) -c $< -o $@
 
 $(BUILDDIR)/%.o: %.c $(BUILDDIR)
+	@echo -e "[\033[1;32m$@\033[0m]"
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILDDIR)/%.o: %.s $(BUILDDIR)
+	@echo -e "[\033[1;32m$@\033[0m]"
 	$(AS) $(ASFLAGS) -c $< -o $@
 
 $(BUILDDIR)/cmsis/%.o: $(CMSIS_SRC)/%.c $(BUILDDIR)/cmsis
+	@echo -e "[\033[1;32m$@\033[0m]"
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILDDIR)/hal/%.o: $(HAL_SRC)/%.c $(BUILDDIR)/hal
+	@echo -e "[\033[1;32m$@\033[0m]"
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILDDIR)/usb/%.o: $(USB_SRC)/%.c $(BUILDDIR)/usb
+	@echo -e "[\033[1;32m$@\033[0m]"
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILDDIR)/usbcdc/%.o: $(USBCDC_SRC)/%.c $(BUILDDIR)/usbcdc
+	@echo -e "[\033[1;32m$@\033[0m]"
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILDDIR)/usbimpl/%.o: $(USBIMPL_SRC)/%.c $(BUILDDIR)/usbimpl
+	@echo -e "[\033[1;32m$@\033[0m]"
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILDOBJS): | $(BUILDDIR) $(BUILDDIR)/hal $(BUILDDIR)/cmsis $(BUILDDIR)/usb $(BUILDDIR)/usbcdc $(BUILDDIR)/usbimpl
 
 $(BUILDDIR) $(BUILDDIR)/hal $(BUILDDIR)/cmsis $(BUILDDIR)/usb $(BUILDDIR)/usbcdc $(BUILDDIR)/usbimpl:
+	@echo -e "[\033[0;32m$@\033[0m]"
 	mkdir -p $(BUILDDIR) $(BUILDDIR)/hal $(BUILDDIR)/cmsis $(BUILDDIR)/usb $(BUILDDIR)/usbcdc $(BUILDDIR)/usbimpl
 
 

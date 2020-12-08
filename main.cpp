@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stm32f4xx.h>
+#include <stm32f4xx_hal.h>
 #include <stm32f4xx_ll_bus.h>
 #include <stm32f4xx_ll_pwr.h>
 #include <stm32f4xx_ll_utils.h>
@@ -12,6 +13,7 @@
 
 
 #include "main.h"
+#include "server.h"
 
 void init_clocks();
 void init_debug();
@@ -24,6 +26,7 @@ int main (void)
 	init_debug();
 	init_gpio();
 	init_timer();
+	init_usb_device();
 
 	printf("Hello, SWOrld!\n");
 
