@@ -13,11 +13,10 @@ void init_usb_device ()
 {
     USBD_Init( &hUsbDeviceHS, &HS_Desc, DEVICE_HS );
 
+	USBD_RegisterClass( &hUsbDeviceHS, &USBD_CDC );
 
-	// USBD_RegisterClass( giving it the CDC class code )
+	USBD_CDC_RegisterInterface( &hUsbDeviceHS, &USBD_Interface_fops_HS );
 
-	// USBD_CDC_RegisterInterface( provide the device structure and the fops_HS interface )
-
-	// USBD_Start( again giving the usb device structure )
+	USBD_Start( &hUsbDeviceHS );
 }
 
