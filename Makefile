@@ -1,4 +1,4 @@
-TARGET=barehal
+TARGET=usbexample
 HAL=1
 DEBUG=1
 CPPSRC=$(shell ls *.cpp)
