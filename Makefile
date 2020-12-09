@@ -87,7 +87,7 @@ APP_OBJECTS=$(patsubst %,$(BUILDDIR)/%,$(CPPSRC:.cpp=.obj) $(CSRC:.c=.o) startup
 
 BUILDOBJS=$(APP_OBJECTS) $(HAL_OBJECTS) $(LL_OBJECTS) $(USB_OBJECTS) $(USBCDC_OBJECTS) $(USBIMPL_OBJECTS)
 
-LDSCRIPT = STM32F103XB_FLASH.ld
+LDSCRIPT = STM32F407ZETX_FLASH.ld
 LIBS=-lc -lm
 LIBDIR=
 LDFLAGS=$(MCU) -specs=nosys.specs -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(TARGET).map,--cref,--gc-sections,--start-group,--end-group -static
