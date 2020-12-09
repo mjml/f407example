@@ -1,6 +1,7 @@
 #include <stm32f4xx_hal.h>
 #include <stm32f4xx_ll_gpio.h>
 #include <stm32f4xx_ll_tim.h>
+#include "usbd_conf.h"
 
 int toggle_led = 0;
 
@@ -12,9 +13,20 @@ void TIM2_IRQHandler (void)
 {
   if (LL_TIM_IsActiveFlag_UPDATE(TIM2)) { // update event
     LL_TIM_ClearFlag_UPDATE(TIM2);
-    LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
+    LL_GPIO_TogglePin(GPIOF, LL_GPIO_PIN_9);
   }
 
+}
+
+void SysTick_Handler(void)
+{
+  /* USER CODE BEGIN SysTick_IRQn 0 */
+
+  /* USER CODE END SysTick_IRQn 0 */
+  HAL_IncTick();
+  /* USER CODE BEGIN SysTick_IRQn 1 */
+
+  /* USER CODE END SysTick_IRQn 1 */
 }
 
 void NMI_Handler(void)
@@ -85,4 +97,15 @@ void UsageFault_Handler(void)
     /* USER CODE BEGIN W1_UsageFault_IRQn 0 */
     /* USER CODE END W1_UsageFault_IRQn 0 */
   }
+}
+
+void OTG_HS_IRQHandler(void)
+{
+  /* USER CODE BEGIN OTG_HS_IRQn 0 */
+
+  /* USER CODE END OTG_HS_IRQn 0 */
+  HAL_PCD_IRQHandler(&hpcd_USB_OTG_HS);
+  /* USER CODE BEGIN OTG_HS_IRQn 1 */
+
+  /* USER CODE END OTG_HS_IRQn 1 */
 }

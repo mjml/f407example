@@ -584,11 +584,10 @@ USBD_StatusTypeDef USBD_LL_PrepareReceive(USBD_HandleTypeDef *pdev, uint8_t ep_a
   HAL_StatusTypeDef hal_status = HAL_OK;
   USBD_StatusTypeDef usb_status = USBD_OK;
 
-  hal_status = HAL_PCD_EP_Receive(pdev->pData, ep_addr, pbuf, size);
-
   // Pitfall:
   // This HAL_PCD call will initiate a DMA transfer, but we might like to actually wait for the transfer to complete before proceeding.
   // The CDC interface implementation will call this repeatedly. This could lead to lost data at the USB HS rate.
+  hal_status = HAL_PCD_EP_Receive(pdev->pData, ep_addr, pbuf, size);
 
   usb_status =  USBD_Get_USB_Status(hal_status);
 

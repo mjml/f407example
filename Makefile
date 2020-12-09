@@ -20,8 +20,8 @@ STPROG=/home/joya/bin/stprog
 arch_short=stm32f4xx
 ARCH_short=STM32F4xx
 arch_specific=stm32f407xx
-MCU=-mcpu=cortex-m3 -mthumb -mfloat-abi=soft
-DEFS = -DSTM32 -DSTM32F407xx -DUSE_FULL_LL_DRIVER -DSWO_DEBUG
+MCU=-mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
+DEFS = -DSTM32 -DSTM32F407xx -DUSE_HAL_DRIVER -DUSE_FULL_LL_DRIVER -DSWO_DEBUG -DDEBUG
 OPT = -O0
 
 EXT_PATH = $(shell pwd)/ext
@@ -75,9 +75,9 @@ USBIMPL_SOURCES = $(addprefix $(USBIMPL_PATH)/,$(USBCDC_MODULES))
 USBIMPL_OBJECTS = $(addprefix $(BUILDDIR)/usbimpl/,$(USBIMPL_MODULES:.c=.o)) 
 
 ASFLAGS=$(MCU) -g -Og -c -Wall -fdata-sections -ffunction-sections -fstack-usage
-CFLAGS=$(MCU) $(OPT) $(INCLUDE) $(DEFS) --specs=nano.specs
+CFLAGS=$(MCU) $(OPT) $(INCLUDE) $(DEFS) --specs=nano.specs  -ffunction-sections -fdata-sections -fstack-usage
 ifeq ($(DEBUG), 1)
-CFLAGS += -g
+CFLAGS+=-g3
 endif
 
 CFLAGS+=-I$(shell pwd) -I$(EXT_INCL) -I$(CMSIS_ARM_INCL) -I$(CMSIS_DEVICE_INCL) -I$(HAL_INCL) -I$(USB_INCL) -I$(USBCDC_INCL) -I$(USBIMPL_INCL)
@@ -90,7 +90,7 @@ BUILDOBJS=$(APP_OBJECTS) $(HAL_OBJECTS) $(LL_OBJECTS) $(USB_OBJECTS) $(USBCDC_OB
 LDSCRIPT = STM32F407ZETX_FLASH.ld
 LIBS=-lc -lm
 LIBDIR=
-LDFLAGS=$(MCU) -specs=nosys.specs -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(TARGET).map,--cref,--gc-sections,--start-group,--end-group -static
+LDFLAGS=$(MCU) --specs=nosys.specs --specs=nano.specs -static -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILDDIR)/$(TARGET).map,--cref,--gc-sections,--start-group,--end-group
 
 all: $(BUILDDIR)/$(TARGET).bin
 
@@ -99,9 +99,9 @@ clean:
 	touch swout.txt
 
 prog: $(BUILDDIR)/$(TARGET).bin
-	$(STPROG) -c port=SWD mode=UR -w  $(BUILDDIR)/$(TARGET).bin 0x8000000 -rst
+	$(STPROG) -c port=SWD mode=UR -w $(BUILDDIR)/$(TARGET).bin 0x8000000 -rst
 
-flash:  $(BUILDDIR)/$(TARGET).bin
+flash: $(BUILDDIR)/$(TARGET).bin
 	$(FLASH) reset
 	$(FLASH) --reset write $(BUILDDIR)/$(TARGET).bin 0x08000000
 
@@ -118,41 +118,41 @@ $(BUILDDIR)/$(TARGET).elf $(TARGET).map: $(BUILDOBJS)
 	$(CC) $(LDFLAGS) -o $@ $^
 	$(SZ) $(BUILDDIR)/$(TARGET).elf
 
-$(BUILDDIR)/%.d: %.cpp $(BUILDDIR)
+$(BUILDDIR)/%.d: %.cpp | $(BUILDDIR)
 	$(CPP) $(CPPFLAGS) -MMD -MP -MF"$(@:%.o=%.d)" -c $< -o $@
 
-$(BUILDDIR)/%.d: %.c $(BUILDDIR)
+$(BUILDDIR)/%.d: %.c | $(BUILDDIR)
 	$(CC) $(CFLAGS) -MMD -MP -MF"$(@:%.o=%.d)" -c $< -o $@
 
-$(BUILDDIR)/%.obj: %.cpp $(BUILDDIR)
+$(BUILDDIR)/%.obj: %.cpp | $(BUILDDIR)
 	@echo -n -e "[\033[1;32m$@\033[0m] "
 	$(CPP) $(CPPFLAGS) -c $< -o $@
 
-$(BUILDDIR)/%.o: %.c $(BUILDDIR)
+$(BUILDDIR)/%.o: %.c | $(BUILDDIR)
 	@echo -n -e "[\033[1;32m$@\033[0m] "
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILDDIR)/%.o: %.s $(BUILDDIR)
+$(BUILDDIR)/%.o: %.s | $(BUILDDIR)
 	@echo -n -e "[\033[1;32m$@\033[0m] "
 	$(AS) $(ASFLAGS) -c $< -o $@
 
-$(BUILDDIR)/cmsis/%.o: $(CMSIS_SRC)/%.c $(BUILDDIR)/cmsis
+$(BUILDDIR)/cmsis/%.o: $(CMSIS_SRC)/%.c | $(BUILDDIR)/cmsis
 	@echo -n -e "[\033[1;32m$@\033[0m] "
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILDDIR)/hal/%.o: $(HAL_SRC)/%.c $(BUILDDIR)/hal
+$(BUILDDIR)/hal/%.o: $(HAL_SRC)/%.c | $(BUILDDIR)/hal
 	@echo -n -e "[\033[1;32m$@\033[0m] "
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILDDIR)/usb/%.o: $(USB_SRC)/%.c $(BUILDDIR)/usb
+$(BUILDDIR)/usb/%.o: $(USB_SRC)/%.c | $(BUILDDIR)/usb
 	@echo -n -e "[\033[1;32m$@\033[0m] "
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILDDIR)/usbcdc/%.o: $(USBCDC_SRC)/%.c $(BUILDDIR)/usbcdc
+$(BUILDDIR)/usbcdc/%.o: $(USBCDC_SRC)/%.c | $(BUILDDIR)/usbcdc
 	@echo -n -e "[\033[1;32m$@\033[0m] "
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILDDIR)/usbimpl/%.o: $(USBIMPL_SRC)/%.c $(BUILDDIR)/usbimpl
+$(BUILDDIR)/usbimpl/%.o: $(USBIMPL_SRC)/%.c | $(BUILDDIR)/usbimpl
 	@echo -n -e "[\033[1;32m$@\033[0m] "
 	$(CC) $(CFLAGS) -c $< -o $@
 

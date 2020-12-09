@@ -30,14 +30,15 @@ int main (void)
 
 	printf("Hello, SWOrld!\n");
 
+	bool toggle_led = false;
 	while (1) {
-		/*
+		
 		if (toggle_led) {
 			toggle_led = 0;
-			LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
+			LL_GPIO_TogglePin(GPIOF, LL_GPIO_PIN_9);
 		}
-		*/
-		LL_mDelay(2000);
+		
+		LL_mDelay(10);
 		
 	}
 }
@@ -69,7 +70,7 @@ void init_clocks ()
 
 	LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
 
-	LL_FLASH_SetLatency(LL_FLASH_LATENCY_5);
+	//LL_FLASH_SetLatency(LL_FLASH_LATENCY_5);
 
 	SystemCoreClockUpdate();
 
@@ -121,13 +122,13 @@ void init_debug ()
  */
 void init_gpio ()
 {	
-	LL_GPIO_InitTypeDef c13;
-	c13.Pin = LL_GPIO_PIN_13;
-	c13.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
-	c13.Speed = LL_GPIO_SPEED_FREQ_HIGH;
-	c13.Mode = LL_GPIO_MODE_OUTPUT;
-	LL_GPIO_Init(GPIOC, &c13);
-	LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_13);
+	LL_GPIO_InitTypeDef f9;
+	f9.Pin = LL_GPIO_PIN_13;
+	f9.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
+	f9.Speed = LL_GPIO_SPEED_FREQ_HIGH;
+	f9.Mode = LL_GPIO_MODE_OUTPUT;
+	LL_GPIO_Init(GPIOF, &f9);
+	LL_GPIO_ResetOutputPin(GPIOF, LL_GPIO_PIN_9);
 }
 
 /**
