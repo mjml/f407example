@@ -1,3 +1,3 @@
-file squeezer.elf
+file build/usbexample.elf
 tar ext :4242
 
