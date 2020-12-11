@@ -26,7 +26,7 @@ int main (void)
 	init_debug();
 	init_gpio();
 	init_timer();
-	init_usb_device();
+	//init_usb_device();
 
 	printf("Hello, SWOrld!\n");
 
@@ -72,10 +72,9 @@ void init_clocks ()
 	LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_2);
 
 	LL_FLASH_SetLatency(LL_FLASH_LATENCY_5);
-	
+
 	LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
 	
-
 	SystemCoreClockUpdate();
 
 	LL_Init1msTick(TICK_RATE);
@@ -125,16 +124,18 @@ void init_debug ()
  */
 void init_gpio ()
 {	
-	LL_GPIO_InitTypeDef f9;
-	f9.Pin = LL_GPIO_PIN_13;
+	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
+	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOF);
+
+	LL_GPIO_InitTypeDef f9 = {0};
+	f9.Pin = LL_GPIO_PIN_9;
 	f9.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
-	f9.Speed = LL_GPIO_SPEED_FREQ_HIGH;
+	f9.Speed = LL_GPIO_SPEED_FREQ_LOW;
 	f9.Mode = LL_GPIO_MODE_OUTPUT;
+	f9.Alternate = 0;
 	LL_GPIO_Init(GPIOF, &f9);
 	LL_GPIO_ResetOutputPin(GPIOF, LL_GPIO_PIN_9);
 
-	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
-	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOF);
 }
 
 /**
@@ -145,10 +146,12 @@ void init_timer ()
 	uint32_t basefreq = 5;				// PWM frequency 5Hz
 	uint32_t tick_rate = 10000; // Timer ticks per period
 	uint16_t period = static_cast<uint16_t>(tick_rate / basefreq);
-	
+
+	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2);
+
 	{ // Defines a 10000Hz/5Hz base timer
 		
-		LL_TIM_InitTypeDef tim2;
+		LL_TIM_InitTypeDef tim2 = {0};
 		LL_TIM_StructInit(&tim2);
 		tim2.Autoreload = period - 1;
 		tim2.Prescaler = TICK_RATE / tick_rate;
@@ -156,7 +159,7 @@ void init_timer ()
 		tim2.CounterMode = LL_TIM_COUNTERMODE_UP;
 		LL_TIM_Init(TIM2, &tim2);
 
-		LL_TIM_OC_InitTypeDef oc2;
+		LL_TIM_OC_InitTypeDef oc2 = {0};
 		LL_TIM_OC_StructInit(&oc2);
 		oc2.CompareValue = period / 2;
 		oc2.OCMode = LL_TIM_OCMODE_PWM2;
@@ -165,19 +168,27 @@ void init_timer ()
 		LL_TIM_OC_Init(TIM2, LL_TIM_CHANNEL_CH1, &oc2);
 		LL_TIM_OC_ConfigOutput(TIM2, LL_TIM_CHANNEL_CH1, LL_TIM_OCPOLARITY_HIGH);
 
-		LL_GPIO_InitTypeDef a0; // PA0 is TIM2.CH1
+		LL_GPIO_InitTypeDef a0 = {0}; // PA0 is TIM2.CH1
 		LL_GPIO_StructInit(&a0);
 		a0.Pin = LL_GPIO_PIN_0;
 		a0.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-		a0.Speed = LL_GPIO_SPEED_FREQ_HIGH;
+		a0.Speed = LL_GPIO_SPEED_FREQ_LOW;
 		a0.Mode = LL_GPIO_MODE_ALTERNATE;
 		a0.Alternate = GPIO_AF1_TIM2;
 		LL_GPIO_Init(GPIOA, &a0);
+		LL_GPIO_SetAFPin_0_7(GPIOA, LL_GPIO_PIN_0, GPIO_AF1_TIM2);
 		LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_0);
+		
+		LL_TIM_SetUpdateSource(TIM2, LL_TIM_UPDATESOURCE_COUNTER);
+		LL_TIM_EnableUpdateEvent(TIM2);
+		LL_TIM_EnableIT_UPDATE(TIM2);
+		LL_TIM_EnableIT_CC1(TIM2);
 
+		NVIC_EnableIRQ(TIM2_IRQn);
+		LL_TIM_SetCounter(TIM2, 0);
 		LL_TIM_EnableCounter(TIM2);
+		
 	}
-	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2);
 }
 
 extern "C" void Error_Handler(void)

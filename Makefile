@@ -114,7 +114,7 @@ $(BUILDDIR)/$(TARGET).bin: $(BUILDDIR)/$(TARGET).elf
 	@echo -n -e "[\033[1;32m$@\033[0m] "
 	$(BIN) $< $@
 
-$(BUILDDIR)/$(TARGET).elf $(TARGET).map: $(BUILDOBJS)
+$(BUILDDIR)/$(TARGET).elf $(BUILDDIR)/$(TARGET).map: $(BUILDOBJS)
 	@echo -n -e "[\033[1;32m$@\033[0m] "
 	$(CC) $(LDFLAGS) -o $@ $^
 	$(SZ) $(BUILDDIR)/$(TARGET).elf
