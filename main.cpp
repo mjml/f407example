@@ -57,7 +57,10 @@ void init_clocks ()
 	RCC->CFGR = cfgr;                 
 
 	LL_RCC_HSE_Enable();
-	while (LL_RCC_HSE_IsReady() == 0) {};
+	while (LL_RCC_HSE_IsReady() == 0) {}
+
+	LL_RCC_HSI_Enable();
+	while (LL_RCC_HSI_IsReady() ==0) {}
 
 	LL_RCC_PLL_Disable();
 	LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSE, LL_RCC_PLLM_DIV_4, 168, LL_RCC_PLLP_DIV_2);
@@ -68,18 +71,18 @@ void init_clocks ()
 	LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_4);
 	LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_2);
 
+	LL_FLASH_SetLatency(LL_FLASH_LATENCY_5);
+	
 	LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
-
-	//LL_FLASH_SetLatency(LL_FLASH_LATENCY_5);
+	
 
 	SystemCoreClockUpdate();
 
 	LL_Init1msTick(TICK_RATE);
 	
 	LL_SetSystemCoreClock(TICK_RATE);
-
-	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
-	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2);
+	
+	
 }
 
 
@@ -129,6 +132,9 @@ void init_gpio ()
 	f9.Mode = LL_GPIO_MODE_OUTPUT;
 	LL_GPIO_Init(GPIOF, &f9);
 	LL_GPIO_ResetOutputPin(GPIOF, LL_GPIO_PIN_9);
+
+	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
+	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOF);
 }
 
 /**
@@ -165,11 +171,13 @@ void init_timer ()
 		a0.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 		a0.Speed = LL_GPIO_SPEED_FREQ_HIGH;
 		a0.Mode = LL_GPIO_MODE_ALTERNATE;
+		a0.Alternate = GPIO_AF1_TIM2;
 		LL_GPIO_Init(GPIOA, &a0);
 		LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_0);
 
 		LL_TIM_EnableCounter(TIM2);
 	}
+	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2);
 }
 
 extern "C" void Error_Handler(void)

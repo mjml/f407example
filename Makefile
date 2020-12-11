@@ -9,6 +9,7 @@ AS=arm-none-eabi-gcc -x assembler-with-cpp
 LD=arm-none-eabi-ld
 CP=arm-none-eabi-objcopy
 SZ=arm-none-eabi-size
+OBJDUMP=arm-none-eabi-objdump
 HEX=$(CP) -O ihex
 BIN=$(CP) -O binary -S
 
@@ -92,7 +93,7 @@ LIBS=-lc -lm
 LIBDIR=
 LDFLAGS=$(MCU) --specs=nosys.specs --specs=nano.specs -static -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILDDIR)/$(TARGET).map,--cref,--gc-sections,--start-group,--end-group
 
-all: $(BUILDDIR)/$(TARGET).bin
+all: $(BUILDDIR)/$(TARGET).bin $(BUILDDIR)/$(TARGET).map $(BUILDDIR)/$(TARGET).asm
 
 clean:
 	$(RM) -rf *.d *.o *.obj *.map $(TARGET).elf $(TARGET).hex $(TARGET).bin build/* swout.txt
@@ -117,6 +118,9 @@ $(BUILDDIR)/$(TARGET).elf $(TARGET).map: $(BUILDOBJS)
 	@echo -n -e "[\033[1;32m$@\033[0m] "
 	$(CC) $(LDFLAGS) -o $@ $^
 	$(SZ) $(BUILDDIR)/$(TARGET).elf
+
+$(BUILDDIR)/$(TARGET).asm: $(BUILDDIR)/$(TARGET).elf
+	$(OBJDUMP) --disassemble $< > $@
 
 $(BUILDDIR)/%.d: %.cpp | $(BUILDDIR)
 	$(CPP) $(CPPFLAGS) -MMD -MP -MF"$(@:%.o=%.d)" -c $< -o $@
