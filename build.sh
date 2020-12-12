@@ -1,3 +1,3 @@
 #!/bin/bash
 
-make
+make -j 11 -l 12

@@ -80,8 +80,6 @@ void init_clocks ()
 	LL_Init1msTick(TICK_RATE);
 	
 	LL_SetSystemCoreClock(TICK_RATE);
-	
-	
 }
 
 
@@ -93,10 +91,10 @@ void init_debug ()
 #ifdef SWO_DEBUG
 	// Configure the TPIU
 	CoreDebug->DEMCR |= (0x1 << CoreDebug_DEMCR_TRCENA_Pos);  // enable the trace port within the ARM Core debug component
-	TPI->CSPSR = 0x1;  // set port size to 1
-	TPI->FFCR = 0x102; // enable the TPIU formatter
-	TPI->SPPR = 0x0;   // set "trace port mode" protocol (not Manchester or NRZ)
-	TPI->ACPR = 72000000 / 1000000;
+	TPI->CSPSR = 0x1;  // set port width to 1
+	TPI->FFCR  = 0x0100; // disable the TPIU formatter 
+	TPI->SPPR  = 0x02;  // Async / NRZ (8N1 serial mode) (default)
+	TPI->ACPR  = (168000000 / 1000000);
 	
 	// Configure the DBGMCU
 	LL_DBGMCU_SetTracePinAssignment(LL_DBGMCU_TRACE_ASYNCH);
@@ -104,10 +102,11 @@ void init_debug ()
 	// Configure the ITM
 	while (ITM->TCR & 0x00800000U) {};
 	ITM->LAR = 0xC5ACCE55;  // lock access register needs this exact value
-	ITM->TCR = 0x00010005;  // trace control register needs: an ATB number different than zero (1), the SWO clock timestamp counter enabled, and the global ITM bit enabled
-	ITM->TER = 0x01;        // trace enable register: enable stimulus port 0
-	ITM->TPR = 0x01;        // trace privilege register: unmask stimulus unmask ports 7:0
-
+	ITM->TCR = 0x00010005;  // trace control register needs: an ATB number different than zero (1), the SWO clock timestamp counter enabled, and the global ITM bit enabled (default)
+	ITM->TER = 0x01;        // trace enable register: enable stimulus port 0 (default)
+	ITM->TPR = 0x01;        // trace privilege register: unmask stimulus unmask ports 7:0 (default)
+	
+	
 	// further values written to ITM->PORT[0] will be written to the SWO/SWV...
 #else
 	CoreDebug->DEMCR &= ~(0x1 << CoreDebug_DEMCR_TRCENA_Pos); // disable the trace port
@@ -135,7 +134,6 @@ void init_gpio ()
 	f9.Alternate = 0;
 	LL_GPIO_Init(GPIOF, &f9);
 	LL_GPIO_ResetOutputPin(GPIOF, LL_GPIO_PIN_9);
-
 }
 
 /**
@@ -147,6 +145,7 @@ void init_timer ()
 	uint32_t tick_rate = 10000; // Timer ticks per period
 	uint16_t period = static_cast<uint16_t>(tick_rate / basefreq);
 
+	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA); // redundant but this lets you comment out other sections
 	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2);
 
 	{ // Defines a 10000Hz/5Hz base timer
