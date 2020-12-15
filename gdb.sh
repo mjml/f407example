@@ -1,35 +1,6 @@
 #!/bin/bash
 
-
-get_pid()
-{
-		local pid=$(ps aux | grep "$1" | grep -v grep | awk -e '{print $2}' | head -1)
-		echo $pid
-}
-
-
-wait_pid()
-{
-		local pid=$(get_pid $1)
-		while [ -z "$pid" ]; do
-				sleep 0.1
-				printf "Waiting for $1...\n"
-				pid=$(get_pid $1)
-		done
-		printf "$1 is running.\n"
-}
-
-wait_gone_pid()
-{
-		local pid=$1
-		while [ -n "$pid" ]; do
-				printf "Waiting for shutdown of $pid"
-				sleep 0.1
-				pid=$(get_pid openocd)
-		done
-		printf "$pid is terminated.\n"
-}
-
+source ~/bin/functions/pids
 
 openocd_init ()
 {
