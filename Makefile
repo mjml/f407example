@@ -93,7 +93,7 @@ LIBS=-lc -lm
 LIBDIR=
 LDFLAGS=$(MCU) --specs=nosys.specs --specs=nano.specs -static -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILDDIR)/$(TARGET).map,--cref,--gc-sections,--start-group,--end-group
 
-all: $(BUILDDIR)/$(TARGET).bin $(BUILDDIR)/$(TARGET).map $(BUILDDIR)/$(TARGET).asm
+all: $(BUILDDIR)/$(TARGET).bin $(BUILDDIR)/$(TARGET).hex $(BUILDDIR)/$(TARGET).map $(BUILDDIR)/$(TARGET).asm
 
 clean:
 	$(RM) -rf *.d *.o *.obj *.map $(TARGET).elf $(TARGET).hex $(TARGET).bin build/* swout.txt
@@ -104,7 +104,7 @@ prog: $(BUILDDIR)/$(TARGET).bin
 
 flash: $(BUILDDIR)/$(TARGET).bin
 	$(FLASH) reset
-	$(FLASH) --reset write $(BUILDDIR)/$(TARGET).bin 0x08000000
+	$(FLASH) --reset --freq=1000000 write $(BUILDDIR)/$(TARGET).bin 0x08000000
 
 $(BUILDDIR)/$(TARGET).hex: $(BUILDDIR)/$(TARGET).elf
 	@echo -n -e "[\033[1;32m$@\033[0m] "
