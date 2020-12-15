@@ -11,13 +11,26 @@ USBD_HandleTypeDef hUsbDeviceHS;
 
 void init_usb_device ()
 {
-	// Pitfall: Consider changing this to full speed. The USB Clock can only go at 48mbit
-    USBD_Init( &hUsbDeviceHS, &HS_Desc, DEVICE_HS );
+    if (USBD_Init( &hUsbDeviceHS, &HS_Desc, DEVICE_HS ) != USBD_OK) {
+		printf("USBD_Init was unsuccessful.\n");
+		return;
+	}
 
-	USBD_RegisterClass( &hUsbDeviceHS, &USBD_CDC );
+	if (USBD_RegisterClass( &hUsbDeviceHS, &USBD_CDC ) != USBD_OK) {
+		printf("USBD_RegisterClass was unsuccessful.\n");
+		return;
+	}
 
-	USBD_CDC_RegisterInterface( &hUsbDeviceHS, &USBD_Interface_fops_HS );
+	if (USBD_CDC_RegisterInterface( &hUsbDeviceHS, &USBD_Interface_fops_HS ) != USBD_OK) {
+		printf("USBD_CDC_RegisterInterface was unsuccessful.\n");
+		return;
+	}
 
-	USBD_Start( &hUsbDeviceHS );
+	if (USBD_Start( &hUsbDeviceHS ) != USBD_OK) {
+		printf("USBD_Start was unsuccessful.\n");
+		return;
+	}
+	
+	printf("USBD initialization [OK]\n");
 }
 
