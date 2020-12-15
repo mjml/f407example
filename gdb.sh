@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source ~/bin/functions/pids
+source script/bash/pids
 
 openocd_init ()
 {
