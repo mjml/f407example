@@ -11,10 +11,15 @@ int toggle_led = 0;
  */
 void TIM2_IRQHandler (void)
 {
+  /*
   if (LL_TIM_IsActiveFlag_UPDATE(TIM2)) { // update event
     LL_TIM_ClearFlag_UPDATE(TIM2);
-    LL_GPIO_TogglePin(GPIOF, LL_GPIO_PIN_9);
+    LL_GPIO_SetOutputPin(GPIOF, LL_GPIO_PIN_9);
+  } else if (LL_TIM_IsActiveFlag_CC1(TIM2)) {
+    LL_TIM_ClearFlag_CC1(TIM2);
+    LL_GPIO_ResetOutputPin(GPIOF, LL_GPIO_PIN_9);
   }
+  */
 
 }
 
@@ -99,12 +104,12 @@ void UsageFault_Handler(void)
   }
 }
 
-void OTG_HS_IRQHandler(void)
+void OTG_FS_IRQHandler(void)
 {
   /* USER CODE BEGIN OTG_HS_IRQn 0 */
 
   /* USER CODE END OTG_HS_IRQn 0 */
-  HAL_PCD_IRQHandler(&hpcd_USB_OTG_HS);
+  HAL_PCD_IRQHandler(&hpcd_USB_OTG_FS);
   /* USER CODE BEGIN OTG_HS_IRQn 1 */
 
   /* USER CODE END OTG_HS_IRQn 1 */

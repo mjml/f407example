@@ -22,21 +22,39 @@ void init_timer();
 
 int main (void)
 {
+	HAL_Init();
+
 	init_clocks();  // I.e.:this is really just SystemClock_Config() as in the LL examples
 	init_debug();
 	init_gpio();
 	init_timer();
-	//init_usb_device();
 
-	printf("Hello, SWOrld!\n");
+	printf("[Begin Example]\n");
 
-	bool toggle_led = false;
+	init_usb_device();
+
+	LL_mDelay(2000);
+	printf("Here's more text.\n");
+	LL_mDelay(3000);
+	printf("And even more...\n");
+	LL_mDelay(1000);
+	printf("and more...\n");
+	LL_mDelay(5000);
+	printf("This should really test out the SWO print capability and OpenOCD's ability to deal with it.\n");
+	LL_mDelay(800);
+	printf("Here's some ");
+	LL_mDelay(400);
+	printf("quickly printed ");
+	LL_mDelay(400);
+	printf("text.\n");
+	LL_mDelay(5000);
+	printf("We hope you've enjoyed this test of the SWO print function.\n");
+	LL_mDelay(1000);
+	printf("Now resting in a spinloop... Bye!\n");
+
+
+
 	while (1) {
-		
-		if (toggle_led) {
-			toggle_led = 0;
-			LL_GPIO_TogglePin(GPIOF, LL_GPIO_PIN_9);
-		}
 		
 		LL_mDelay(10);
 		
@@ -49,12 +67,11 @@ int main (void)
  */ 
 void init_clocks ()
 {
+	// Turn off MCO1 output
 	auto cfgr = RCC->CFGR;
-	
 	cfgr &= 0x7 << RCC_CFGR_MCO1_Pos;  // clear MCO1 output
 	cfgr |= 0x7 << RCC_CFGR_MCO1_Pos;  // MCO1 output = PLLCLK/2
-
-	RCC->CFGR = cfgr;                 
+	RCC->CFGR = cfgr;
 
 	LL_RCC_HSE_Enable();
 	while (LL_RCC_HSE_IsReady() == 0) {}
@@ -75,11 +92,12 @@ void init_clocks ()
 
 	LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
 	
+	LL_Init1msTick(TICK_RATE);
+	LL_SYSTICK_EnableIT();
+	LL_SetSystemCoreClock(TICK_RATE);
+
 	SystemCoreClockUpdate();
 
-	LL_Init1msTick(TICK_RATE);
-	
-	LL_SetSystemCoreClock(TICK_RATE);
 }
 
 
@@ -93,19 +111,23 @@ void init_debug ()
 	CoreDebug->DEMCR |= (0x1 << CoreDebug_DEMCR_TRCENA_Pos);  // enable the trace port within the ARM Core debug component
 	TPI->CSPSR = 0x1;  // set port width to 1
 	TPI->FFCR  = 0x0100; // disable the TPIU formatter 
-	TPI->SPPR  = 0x02;  // Async / NRZ (8N1 serial mode) (default)
+	TPI->SPPR  = 0x02;  // Async / NRZ (8N1 serial mode) 
 	TPI->ACPR  = (168000000 / 1000000);
 	
 	// Configure the DBGMCU
 	LL_DBGMCU_SetTracePinAssignment(LL_DBGMCU_TRACE_ASYNCH);
-
+	
 	// Configure the ITM
 	while (ITM->TCR & 0x00800000U) {};
 	ITM->LAR = 0xC5ACCE55;  // lock access register needs this exact value
-	ITM->TCR = 0x00010005;  // trace control register needs: an ATB number different than zero (1), the SWO clock timestamp counter enabled, and the global ITM bit enabled (default)
-	ITM->TER = 0x01;        // trace enable register: enable stimulus port 0 (default)
-	ITM->TPR = 0x01;        // trace privilege register: unmask stimulus unmask ports 7:0 (default)
-	
+
+	// trace control register needs: an ATB number different than zero (1), the SWO clock timestamp counter enabled, and the global ITM bit enabled (default)
+	// Also, ITM_TCR_TSENA_Msk causes repeated timestamps and garbage characters to spam openocd's swout file
+	// 
+	//ITM_TCR_SYNCENA_Msk | ITM_TCR_DWTENA_Msk |
+	ITM->TCR = ITM_TCR_DWTENA_Msk | ITM_TCR_ITMENA_Msk;  
+	ITM->TPR = ITM_TPR_PRIVMASK_Msk;                 // trace privilege register: unmask stimulus unmask ports 7:0 (default)
+	ITM->TER = 0x01;                                 // trace enable register: enable stimulus port 0 (default)
 	
 	// further values written to ITM->PORT[0] will be written to the SWO/SWV...
 #else
@@ -125,6 +147,7 @@ void init_gpio ()
 {	
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOF);
+	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
 
 	LL_GPIO_InitTypeDef f9 = {0};
 	f9.Pin = LL_GPIO_PIN_9;
@@ -135,6 +158,7 @@ void init_gpio ()
 	LL_GPIO_Init(GPIOF, &f9);
 	LL_GPIO_ResetOutputPin(GPIOF, LL_GPIO_PIN_9);
 }
+
 
 /**
  * Set up TIM2 as a PWM device
@@ -148,7 +172,7 @@ void init_timer ()
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA); // redundant but this lets you comment out other sections
 	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2);
 
-	{ // Defines a 10000Hz/5Hz base timer
+	{   // Defines a 10000Hz/5Hz base timer
 		
 		LL_TIM_InitTypeDef tim2 = {0};
 		LL_TIM_StructInit(&tim2);
@@ -186,9 +210,9 @@ void init_timer ()
 		NVIC_EnableIRQ(TIM2_IRQn);
 		LL_TIM_SetCounter(TIM2, 0);
 		LL_TIM_EnableCounter(TIM2);
-		
 	}
 }
+
 
 extern "C" void Error_Handler(void)
 {
@@ -197,4 +221,12 @@ extern "C" void Error_Handler(void)
 		/* Insert a delay */
 		HAL_Delay(50);
 	}
+}
+
+void HAL_MspInit(void)
+{
+  	// Seems RCC_SYSCFG and RCC_PWR have their own CLKs to enable
+	__HAL_RCC_SYSCFG_CLK_ENABLE();
+    __HAL_RCC_PWR_CLK_ENABLE();            
+
 }

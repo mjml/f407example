@@ -1,6 +1,6 @@
 #pragma once
 
-#define TICK_RATE 84000000UL
+#define TICK_RATE 168000000UL
 
 #ifdef __cplusplus
 extern "C" {
