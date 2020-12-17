@@ -31,12 +31,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "main.h"
 #include "stm32f4xx.h"
 #include "stm32f4xx_hal.h"
-#include "stm32f4xx_hal_pcd.h"
 
 /* USER CODE BEGIN INCLUDE */
-PCD_HandleTypeDef hpcd_USB_OTG_HS;
+PCD_HandleTypeDef hpcd_USB_OTG_FS;
 /* USER CODE END INCLUDE */
 
 /** @addtogroup USBD_OTG_DRIVER
@@ -74,7 +74,7 @@ PCD_HandleTypeDef hpcd_USB_OTG_HS;
 /*---------- -----------*/
 #define USBD_LPM_ENABLED     0U
 /*---------- -----------*/
-#define USBD_SELF_POWERED     0U
+#define USBD_SELF_POWERED     1U
 
 /****************************************/
 /* #define for FS and HS identification */
