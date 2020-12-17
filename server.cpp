@@ -40,8 +40,6 @@ void init_usb_device ()
 		printf("USBD_Start                      [\e[1;32mOK\e[0m]\n");
 	}
 
-	(*USBD_Interface_fops_FS.Init)();
-	
 	printf("USBD Initialization Complete.\n");
 }
 
