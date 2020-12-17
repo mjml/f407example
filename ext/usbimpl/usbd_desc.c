@@ -63,11 +63,14 @@
   * @{
   */
 
-#define USBD_VID     1155
+//#define USBD_VID     1155
+// I'm assuming this unregistered vendor-id as an adhoc id since it follows the opensource 1209
+#define USBD_VID     0x120a
 #define USBD_LANGID_STRING     1033
-#define USBD_MANUFACTURER_STRING     "Hermitude's"
-#define USBD_PID_FS     22336
-#define USBD_PRODUCT_STRING_FS     "usbboiler"
+#define USBD_MANUFACTURER_STRING     "Hermit's"
+//#define USBD_PID_FS     22336
+#define USBD_PID_FS     0x10
+#define USBD_PRODUCT_STRING_FS     "USB Example"
 #define USBD_CONFIGURATION_STRING_FS     "CDC Config"
 #define USBD_INTERFACE_STRING_FS     "CDC Interface"
 

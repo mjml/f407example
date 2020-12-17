@@ -86,9 +86,9 @@ else
 fi
 		
 
-if [ -n $(get_pid orbuculum) ]; then
-		echo Orbuculum is still running...
-else
-		echo Orbuculum is no longer running.
-fi
+#if [ -n $(get_pid orbuculum) ]; then
+#		echo Orbuculum is still running...
+#else
+#		echo Orbuculum is no longer running.
+#fi
 

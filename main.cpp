@@ -29,7 +29,9 @@ int main (void)
 	init_gpio();
 	init_timer();
 
-	printf("[Begin Example]\n");
+	LL_mDelay(1500);
+
+	printf("\nBegin USB Example...\n");
 
 	init_usb_device();
 
@@ -52,12 +54,9 @@ int main (void)
 	LL_mDelay(1000);
 	printf("Now resting in a spinloop... Bye!\n");
 
-
-
-	while (1) {
-		
-		LL_mDelay(10);
-		
+	while (1) 
+	{	
+		LL_mDelay(10);	
 	}
 }
 
@@ -81,6 +80,8 @@ void init_clocks ()
 
 	LL_RCC_PLL_Disable();
 	LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSE, LL_RCC_PLLM_DIV_4, 168, LL_RCC_PLLP_DIV_2);
+	LL_RCC_PLL_ConfigDomain_48M(LL_RCC_PLLSOURCE_HSE, LL_RCC_PLLM_DIV_4, 168, LL_RCC_PLLQ_DIV_7);
+	
 	LL_RCC_PLL_Enable();
 	while (LL_RCC_PLL_IsReady() == 0) {};
 
@@ -97,7 +98,6 @@ void init_clocks ()
 	LL_SetSystemCoreClock(TICK_RATE);
 
 	SystemCoreClockUpdate();
-
 }
 
 
@@ -165,15 +165,15 @@ void init_gpio ()
  */
 void init_timer ()
 {
-	uint32_t basefreq = 5;				// PWM frequency 5Hz
-	uint32_t tick_rate = 10000; // Timer ticks per period
+	// Defines a 1Mhz/200Hz base timer
+	uint32_t basefreq = 200;				// PWM frequency 5Hz
+	uint32_t tick_rate = 1000000;           // Timer ticks per period
 	uint16_t period = static_cast<uint16_t>(tick_rate / basefreq);
 
-	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA); // redundant but this lets you comment out other sections
+	//LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA); // redundant but this lets you comment out other sections
 	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2);
 
-	{   // Defines a 10000Hz/5Hz base timer
-		
+	{	
 		LL_TIM_InitTypeDef tim2 = {0};
 		LL_TIM_StructInit(&tim2);
 		tim2.Autoreload = period - 1;
@@ -191,6 +191,7 @@ void init_timer ()
 		LL_TIM_OC_Init(TIM2, LL_TIM_CHANNEL_CH1, &oc2);
 		LL_TIM_OC_ConfigOutput(TIM2, LL_TIM_CHANNEL_CH1, LL_TIM_OCPOLARITY_HIGH);
 
+		/*
 		LL_GPIO_InitTypeDef a0 = {0}; // PA0 is TIM2.CH1
 		LL_GPIO_StructInit(&a0);
 		a0.Pin = LL_GPIO_PIN_0;
@@ -201,6 +202,7 @@ void init_timer ()
 		LL_GPIO_Init(GPIOA, &a0);
 		LL_GPIO_SetAFPin_0_7(GPIOA, LL_GPIO_PIN_0, GPIO_AF1_TIM2);
 		LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_0);
+		*/
 		
 		LL_TIM_SetUpdateSource(TIM2, LL_TIM_UPDATESOURCE_COUNTER);
 		LL_TIM_EnableUpdateEvent(TIM2);

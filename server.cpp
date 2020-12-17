@@ -1,16 +1,22 @@
 
 #include <stm32f407xx.h>
+#include <stm32f4xx_ll_utils.h>
 #include <usbd_core.h>
 #include "usbd_desc.h"
 #include "usbd_conf.h"
 #include "usbd_cdc.h"
 #include "usbd_cdc_if.h"
 
+#include "server.h"
+
+#define EXTERN extern "C"
+
 
 USBD_HandleTypeDef hUsbDeviceFS;
 
-void init_usb_device ()
+EXTERN void init_usb_device ()
 {
+	__HAL_RCC_USB_OTG_FS_CLK_ENABLE();
 	
     if (USBD_Init( &hUsbDeviceFS, &FS_Desc, DEVICE_FS ) != USBD_OK) {
 		printf("USBD_Init                       [\e[1;31mFAILED\e[0m]\n");
@@ -41,5 +47,7 @@ void init_usb_device ()
 	}
 
 	printf("USBD Initialization Complete.\n");
+
 }
+
 
