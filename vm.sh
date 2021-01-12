@@ -25,3 +25,4 @@ virsh start kdev --console
 
 # After it's done, detach the device
 virsh detach-device kdev virt-usb.xml --config
+rm -rf virt-usb.xml
