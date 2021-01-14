@@ -93,7 +93,7 @@ LIBS=-lc -lm
 LIBDIR=
 LDFLAGS=$(MCU) --specs=nosys.specs --specs=nano.specs -static -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILDDIR)/$(TARGET).map,--cref,--gc-sections,--start-group,--end-group
 
-all: $(BUILDDIR)/$(TARGET).bin $(BUILDDIR)/$(TARGET).hex $(BUILDDIR)/$(TARGET).map $(BUILDDIR)/$(TARGET).asm
+all: $(BUILDDIR)/$(TARGET).bin $(BUILDDIR)/$(TARGET).hex $(BUILDDIR)/$(TARGET).map $(BUILDDIR)/$(TARGET).asm vmctl
 
 clean:
 	$(RM) -rf *.d *.o *.obj *.map $(TARGET).elf $(TARGET).hex $(TARGET).bin build/* swout.txt
@@ -165,6 +165,9 @@ $(BUILDOBJS): | $(BUILDDIR) $(BUILDDIR)/hal $(BUILDDIR)/cmsis $(BUILDDIR)/usb $(
 $(BUILDDIR) $(BUILDDIR)/hal $(BUILDDIR)/cmsis $(BUILDDIR)/usb $(BUILDDIR)/usbcdc $(BUILDDIR)/usbimpl:
 	@echo -n -e "[\033[0;32m$@\033[0m] "
 	mkdir -p $(BUILDDIR) $(BUILDDIR)/hal $(BUILDDIR)/cmsis $(BUILDDIR)/usb $(BUILDDIR)/usbcdc $(BUILDDIR)/usbimpl
+
+vmctl: vmctl.c
+	gcc -g -o $@ $^
 
 
 .PHONY: clean all flash prog all

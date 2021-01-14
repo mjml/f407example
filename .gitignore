@@ -11,3 +11,5 @@ build
 .vscode
 swout.txt
 *.code-workspace
+virt-*.xml
+vmctl
