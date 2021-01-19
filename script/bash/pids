@@ -1,7 +1,7 @@
 
 getpid()
 {
-    cmdmatch=$@
+    local cmdmatch=$@
 		local pid=$(ps aux | grep -Pv "grep|awk" | awk "{ cmd=\$11; for(i=12;i<=NR;i++) { cmd=cmd \" \" \$i }; gsub(\"[[:space:]]*\$\",\"\",cmd); if(match(cmd, \"$cmdmatch\")) { print \$2 } }")
 		echo "$pid"
 }
