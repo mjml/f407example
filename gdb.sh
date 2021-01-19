@@ -51,7 +51,7 @@ swoview_init ()
 swoview_finish ()
 {
 		if [ -n "$swoview_pid" ]; then
-				swoview_pid=$(ps aux | grep -P "xfce4-terminal.*tail.*swout\.txt" | awk -e '{print $2}')
+				swoview_pid=$(ps aux | grep -P "swout\.txt" | grep -v grep | awk -e '{print $2}')
 		fi
 		if [ -n "$swoview_pid" ]; then
 				kill -9 $swoview_pid
