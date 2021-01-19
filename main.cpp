@@ -19,6 +19,7 @@ void init_clocks();
 void init_debug();
 void init_gpio();
 void init_timer();
+void deassert_usbfs_dp ();
 
 int main (void)
 {
@@ -28,6 +29,9 @@ int main (void)
 	init_debug();
 	init_gpio();
 	init_timer();
+
+	// De-assert PA12 (USB_FS_DP) on startup in order to cause the host to re-enumerate the USB device
+	deassert_usbfs_dp();
 
 	LL_mDelay(1500);
 
@@ -191,19 +195,6 @@ void init_timer ()
 		LL_TIM_OC_Init(TIM2, LL_TIM_CHANNEL_CH1, &oc2);
 		LL_TIM_OC_ConfigOutput(TIM2, LL_TIM_CHANNEL_CH1, LL_TIM_OCPOLARITY_HIGH);
 
-		/*
-		LL_GPIO_InitTypeDef a0 = {0}; // PA0 is TIM2.CH1
-		LL_GPIO_StructInit(&a0);
-		a0.Pin = LL_GPIO_PIN_0;
-		a0.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-		a0.Speed = LL_GPIO_SPEED_FREQ_LOW;
-		a0.Mode = LL_GPIO_MODE_ALTERNATE;
-		a0.Alternate = GPIO_AF1_TIM2;
-		LL_GPIO_Init(GPIOA, &a0);
-		LL_GPIO_SetAFPin_0_7(GPIOA, LL_GPIO_PIN_0, GPIO_AF1_TIM2);
-		LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_0);
-		*/
-		
 		LL_TIM_SetUpdateSource(TIM2, LL_TIM_UPDATESOURCE_COUNTER);
 		LL_TIM_EnableUpdateEvent(TIM2);
 		LL_TIM_EnableIT_UPDATE(TIM2);
@@ -213,6 +204,26 @@ void init_timer ()
 		LL_TIM_SetCounter(TIM2, 0);
 		LL_TIM_EnableCounter(TIM2);
 	}
+}
+
+
+void deassert_usbfs_dp ()
+{
+	printf("Deasserting USB_FS_DP....       ");
+
+	LL_GPIO_InitTypeDef pa12;
+	pa12.Pin = LL_GPIO_PIN_12;
+	pa12.Mode = LL_GPIO_MODE_OUTPUT;
+	pa12.Speed = LL_GPIO_SPEED_FREQ_LOW;
+	pa12.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+	LL_GPIO_Init(GPIOA, &pa12);
+	
+	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_12);
+	LL_mDelay(150);
+	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_12);
+
+	printf("[\e[1;32mDone\e[0m]\n");
+
 }
 
 
