@@ -100,7 +100,7 @@ clean:
 	touch swout.txt
 
 prog: $(BUILDDIR)/$(TARGET).bin
-	$(STPROG) -c port=SWD mode=UR -w $(BUILDDIR)/$(TARGET).bin 0x8000000 -rst
+	$(STPROG) -c port=SWD mode=NORMAL -w $(BUILDDIR)/$(TARGET).bin 0x8000000 -hardRst
 
 flash: $(BUILDDIR)/$(TARGET).bin
 	$(FLASH) reset
