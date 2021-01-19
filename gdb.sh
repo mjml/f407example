@@ -4,12 +4,16 @@ source script/bash/pids
 
 openocd_init ()
 {
-		local pid=$(get_pid openocd)
+		local pid=$(getpid openocd)
 		if [ -z "$pid" ]; then
 				printf "Starting openocd...\n"
 				openocd &
 				wait_pid openocd
 				sleep 0.8
+		fi
+
+		if [[ ! -e swout.txt ]]; then
+				touch swout.txt
 		fi
 		
 		# Now start up orbuculum and put orbcat in another window
@@ -22,7 +26,7 @@ openocd_init ()
 
 openocd_finish ()
 {
-		local pid=$(get_pid openocd)
+		local pid=$(getpid openocd)
 		if [ -n  "$pid" ]; then
 				printf "Shutting down openocd at $pid...\n"
 				(printf "tpiu config disable\n"; sleep 0.1; printf "exit\n") | nc localhost 4444
@@ -34,7 +38,7 @@ openocd_finish ()
 
 		
 				# Wait for openocd to be confirmed shut down
-				wait_gone_pid "$pid"
+				joinpid "$pid"
 		fi
 }
 
@@ -51,7 +55,7 @@ swoview_init ()
 swoview_finish ()
 {
 		if [ -n "$swoview_pid" ]; then
-				swoview_pid=$(ps aux | grep -P "swout\.txt" | grep -v grep | awk -e '{print $2}')
+				swoview_pid=$(ps aux | awk '{ cmd=$11; for(i=12;i<=NF;i++) { cmd=cmd " " $i }; if (cmd == "tail -f swout.txt") { print $2 } }')
 		fi
 		if [ -n "$swoview_pid" ]; then
 				kill -9 $swoview_pid
@@ -59,7 +63,7 @@ swoview_finish ()
 }
 
 if [ -n "$REPORT_PID" ]; then
-		pid=$(get_pid openocd)
+		pid=$(getpid openocd)
 		printf "OpenOCD pid is $pid\n"
 		exit
 fi
@@ -79,16 +83,11 @@ arm-none-eabi-gdb $@
 
 swoview_finish
 
-if [ -n $(get_pid openocd) ]; then
+if [ -n $(getpid openocd) ]; then
 		echo OpenOCD is still running...
 else
 		echo OpenOCD is no longer running.
 fi
 		
 
-#if [ -n $(get_pid orbuculum) ]; then
-#		echo Orbuculum is still running...
-#else
-#		echo Orbuculum is no longer running.
-#fi
 

@@ -1,13 +1,12 @@
 
-get_pid()
+getpid()
 {
     cmdmatch=$@
-		local pid=$(ps aux | awk "{ cmd=\$11; for(i=12;i<=NR;i++) { cmd=cmd \" \" \$i }; gsub(\"[[:space:]]*\$\",\"\",cmd); if(cmd == \"$cmdmatch\") { print \$2 } }")
+		local pid=$(ps aux | grep -Pv "grep|awk" | awk "{ cmd=\$11; for(i=12;i<=NR;i++) { cmd=cmd \" \" \$i }; gsub(\"[[:space:]]*\$\",\"\",cmd); if(match(cmd, \"$cmdmatch\")) { print \$2 } }")
 		echo "$pid"
 }
 
-
-wait_pid()
+waitpid()
 {
 		local pid=$(get_pid $1)
 		while [ -z "$pid" ]; do
@@ -18,7 +17,7 @@ wait_pid()
 		printf "$1 is running.\n"
 }
 
-wait_gone_pid()
+joinpid()
 {
 		local pid=$1
 		while [ -n "$pid" ]; do
