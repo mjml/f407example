@@ -34,6 +34,13 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+USBD_CDC_LineCodingTypeDef linecoding = {
+  38400,
+  0x00,
+  0x00,
+  0x08
+};
+
 
 /* USER CODE END PV */
 
@@ -187,23 +194,23 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
   {
     case CDC_SEND_ENCAPSULATED_COMMAND:
 
-    break;
+      break;
 
     case CDC_GET_ENCAPSULATED_RESPONSE:
 
-    break;
+      break;
 
     case CDC_SET_COMM_FEATURE:
 
-    break;
+      break;
 
     case CDC_GET_COMM_FEATURE:
 
-    break;
+      break;
 
     case CDC_CLEAR_COMM_FEATURE:
 
-    break;
+      break;
 
   /*******************************************************************************/
   /* Line Coding Structure                                                       */
@@ -223,24 +230,32 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
   /* 6      | bDataBits  |   1   | Number Data bits (5, 6, 7, 8 or 16).          */
   /*******************************************************************************/
     case CDC_SET_LINE_CODING:
-
-    break;
+      linecoding.bitrate = (uint32_t)( pbuf[0] | (pbuf[1] << 8) | (pbuf[2] << 16) | (pbuf[3] << 24) );
+      linecoding.format      = pbuf[4];
+      linecoding.paritytype  = pbuf[5];
+      linecoding.datatype    = pbuf[6];
+      break;
 
     case CDC_GET_LINE_CODING:
-
-    break;
+      pbuf[0] = (uint8_t)(linecoding.bitrate);
+      pbuf[1] = (uint8_t)(linecoding.bitrate >> 8);
+      pbuf[2] = (uint8_t)(linecoding.bitrate >> 16);
+      pbuf[3] = (uint8_t)(linecoding.bitrate >> 24);
+      pbuf[4] = (uint8_t)(linecoding.format);
+      pbuf[5] = (uint8_t)(linecoding.paritytype);
+      pbuf[6] = (uint8_t)(linecoding.datatype);
+      break;
 
     case CDC_SET_CONTROL_LINE_STATE:
-    // TODO: This might include connect/disconnect (?) Look into it.
-
-    break;
+      // TODO: This might include connect/disconnect (?) Look into it.
+      break;
 
     case CDC_SEND_BREAK:
-    // TODO: Send EOF? This should cue the host terminal to close its connection.
-    break;
+      // TODO: Send EOF? This should cue the host terminal to close its connection.
+      break;
 
-  default:
-    break;
+    default:
+      break;
   }
 
   return (USBD_OK);
@@ -257,7 +272,7 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
   *         before transfer is complete on CDC interface (ie. using DMA controller)
   *         it will result in receiving more data while previous ones are still
   *         not sent.
-  *
+  * 
   * @param  Buf: Buffer of data to be received
   * @param  Len: Number of data received (in bytes)
   * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
@@ -265,6 +280,12 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
 static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 {
   /* USER CODE BEGIN 6 */
+  /* TOOD: In FS mode, this receive call doesn't use DMA. 
+  So after receiving some text, we should be able to do
+  something like print it or feed it into a line-buffering queue.
+  */
+  printf(">%s", Buf);
+
   USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
   USBD_CDC_ReceivePacket(&hUsbDeviceFS);
   return (USBD_OK);
