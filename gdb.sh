@@ -12,9 +12,7 @@ openocd_init ()
 				sleep 0.8
 		fi
 
-		if [[ ! -e swout.txt ]]; then
-				touch swout.txt
-		fi
+		echo "" > swout.txt
 		
 		# Now start up orbuculum and put orbcat in another window
 		#printf "Starting orbuculum...\n"
@@ -35,8 +33,7 @@ openocd_finish ()
 				kill -6 $pid
 				#killthe orbuculum
 				orbcat_finish
-
-		
+				
 				# Wait for openocd to be confirmed shut down
 				joinpid "$pid"
 		fi
